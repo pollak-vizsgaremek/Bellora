@@ -1,8 +1,8 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import { AlertProvider } from './context/AlertContext';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
+import { AuthProvider } from "./context/AuthContext";
+import { AlertProvider } from "./context/AlertContext";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 function App() {
   return (
