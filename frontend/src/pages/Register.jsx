@@ -148,7 +148,7 @@ export default function Register() {
               ) : (
                 <>
                   <UserPlus size={20} />
-                  <span>Ingyen regisztráció</span>
+                  <span>Regisztráció</span>
                 </>
               )}
             </button>

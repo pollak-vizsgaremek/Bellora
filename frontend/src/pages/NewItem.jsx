@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useAlert } from '../context/AlertContext';
 import api from '../services/api';
 import Navbar from '../components/Navbar';
+import { UploadCloud, Lightbulb } from 'lucide-react';
 
 export default function NewItem() {
     const { user } = useAuth();
@@ -165,7 +166,13 @@ export default function NewItem() {
                             disabled={loading}
                             className="w-full bg-blue-600 text-white py-3 md:py-4 rounded-lg hover:bg-blue-700 font-bold text-base md:text-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {loading ? 'Feltöltés...' : '📤 Hirdetés feladása'}
+                            {loading ? (
+                                'Feltöltés...'
+                            ) : (
+                                <>
+                                    <UploadCloud className="inline-block mr-2 w-5 h-5" /> Hirdetés feladása
+                                </>
+                            )}
                         </button>
                         <button
                             type="button"
@@ -178,13 +185,13 @@ export default function NewItem() {
                 </form>
 
                 <div className="mt-8 bg-gray-800 p-6 rounded-lg border border-gray-700">
-                    <h3 className="text-white font-bold mb-3">💡 Tippek sikeres hirdetéshez:</h3>
+                    <h3 className="text-white font-bold mb-3"><Lightbulb className="inline-block mr-2 w-5 h-5 text-yellow-400" /> Tippek sikeres hirdetéshez:</h3>
                     <ul className="text-gray-400 space-y-2 text-sm">
-                        <li>✓ Készíts jó minőségű fotókat világos helyen</li>
-                        <li>✓ Írd le pontosan a termék állapotát</li>
-                        <li>✓ Add meg az összes fontos tulajdonságot (méret, szín, márka)</li>
-                        <li>✓ Határozz meg reális árat a termék állapotához képest</li>
-                        <li>✓ Válaszolj gyorsan az érdeklődőknek</li>
+                        <li>Készíts jó minőségű fotókat világos helyen</li>
+                        <li>Írd le pontosan a termék állapotát</li>
+                        <li>Add meg az összes fontos tulajdonságot (méret, szín, márka)</li>
+                        <li>Határozz meg reális árat a termék állapotához képest</li>
+                        <li>Válaszolj gyorsan az érdeklődőknek</li>
                     </ul>
                 </div>
             </div>

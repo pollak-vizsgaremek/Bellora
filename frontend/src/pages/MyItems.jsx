@@ -13,6 +13,8 @@ import {
   Clock,
   DollarSign,
   Box,
+  Image,
+  XCircle,
 } from "lucide-react";
 
 export default function MyItems() {
@@ -132,7 +134,9 @@ export default function MyItems() {
           </div>
         ) : items.length === 0 ? (
           <div className="text-center py-12 md:py-20 bg-gray-800/60 backdrop-blur-lg rounded-2xl border border-gray-700 px-4">
-            <div className="text-4xl md:text-6xl mb-3 md:mb-4">📦</div>
+            <div className="mb-3 md:mb-4">
+              <Package className="w-16 h-16 md:w-24 md:h-24 text-blue-200 mx-auto" />
+            </div>
             <h3 className="text-xl md:text-2xl font-bold text-white mb-2">
               Még nincs hirdetésed
             </h3>
@@ -143,7 +147,7 @@ export default function MyItems() {
               onClick={() => navigate("/new-item")}
               className="bg-blue-600 text-white px-6 md:px-8 py-2.5 md:py-3 rounded-lg hover:bg-blue-700 font-semibold transition text-sm md:text-base"
             >
-              ➕ Első hirdetés feladása
+              <Plus className="inline-block mr-2 w-4 h-4 md:w-5 md:h-5" /> Első hirdetés feladása
             </button>
           </div>
         ) : (
@@ -163,11 +167,11 @@ export default function MyItems() {
                     />
                   ) : (
                     <div className="w-full h-56 bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center">
-                      <span className="text-gray-500 text-5xl">🖼️</span>
+                      <Image className="text-gray-500 w-20 h-20" />
                     </div>
                   )}
 
-                  {/* Státusz badge */}
+  
                   <div className="absolute top-3 right-3">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -178,11 +182,19 @@ export default function MyItems() {
                           : "bg-yellow-500 text-black"
                       }`}
                     >
-                      {item.status === "available"
-                        ? "✓ Elérhető"
-                        : item.status === "sold"
-                        ? "✓ Eladva"
-                        : "⏳ Foglalt"}
+                      {item.status === "available" ? (
+                        <>
+                          <CheckCircle className="inline-block w-3.5 h-3.5 mr-1 text-white" /> Elérhető
+                        </>
+                      ) : item.status === "sold" ? (
+                        <>
+                          <XCircle className="inline-block w-3.5 h-3.5 mr-1 text-white" /> Eladva
+                        </>
+                      ) : (
+                        <>
+                          <Clock className="inline-block w-3.5 h-3.5 mr-1 text-black" /> Foglalt
+                        </>
+                      )}
                     </span>
                   </div>
                 </div>
