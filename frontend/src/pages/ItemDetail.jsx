@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router';
 import { useAuth } from '../hooks/useAuth';
 import { useAlert } from '../context/AlertContext';
 import api from '../services/api';
 import Navbar from '../components/Navbar';
-import { 
-  Heart, MessageCircle, Share2, MapPin, Clock, Tag, 
+import {
+  Heart, MessageCircle, Share2, MapPin, Clock, Tag,
   TrendingDown, Check, X, ArrowRight, AlertCircle, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
@@ -81,7 +81,7 @@ export default function ItemDetail() {
     }
 
     const minPrice = item.price * 0.7;
-    
+
     if (dailyLimit.remaining <= 0) {
       alertError('Elérted a napi 20 ajánlat limitet!');
       return;
@@ -104,7 +104,7 @@ export default function ItemDetail() {
 
   const handleAcceptOffer = async (offerId) => {
     if (!window.confirm('Biztosan elfogadod ezt az ajánlatot?')) return;
-    
+
     try {
       await api.put(`/offers/${offerId}/accept`);
       success('Árajánlat elfogadva!');
@@ -116,7 +116,7 @@ export default function ItemDetail() {
 
   const handleRejectOffer = async (offerId) => {
     if (!window.confirm('Biztosan elutasítod ezt az ajánlatot?')) return;
-    
+
     try {
       await api.put(`/offers/${offerId}/reject`);
       info('Árajánlat elutasítva');
@@ -148,7 +148,7 @@ export default function ItemDetail() {
 
   const handleAcceptCounter = async (offerId) => {
     if (!window.confirm('Biztosan elfogadod a visszaájnlatot?')) return;
-    
+
     try {
       await api.put(`/offers/${offerId}/accept-counter`);
       success('Visszaájnlat elfogadva!');
@@ -160,7 +160,7 @@ export default function ItemDetail() {
 
   const handleCancelOffer = async (offerId) => {
     if (!window.confirm('Biztosan visszavonod az árajánlat?')) return;
-    
+
     try {
       await api.delete(`/offers/${offerId}`);
       info('Árajánlat törölve!');
@@ -176,7 +176,7 @@ export default function ItemDetail() {
       navigate('/login');
       return;
     }
-    
+
     try {
       if (isFavorite) {
         await api.delete(`/favorites/${id}`);
@@ -187,7 +187,7 @@ export default function ItemDetail() {
         setIsFavorite(true);
         success('Hozzáadva a kedvencekhez!');
       }
-      loadItem(); 
+      loadItem();
     } catch (err) {
       console.error('Kedvenc hozzáadási hiba:', err);
       alertError(err.response?.data?.message || 'Hiba történt a kedvencek kezelésekor');
@@ -213,14 +213,14 @@ export default function ItemDetail() {
       rejected: 'bg-red-500/20 text-red-400 border-red-500/30',
       counter_offered: 'bg-blue-500/20 text-blue-400 border-blue-500/30'
     };
-    
+
     const labels = {
       pending: 'Függőben',
       accepted: 'Elfogadva',
       rejected: 'Elutasítva',
       counter_offered: 'Visszaajánlat'
     };
-    
+
     return (
       <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${styles[status]}`}>
         {labels[status]}
@@ -281,9 +281,8 @@ export default function ItemDetail() {
                             <button
                               key={idx}
                               onClick={() => setCurrentImageIndex(idx)}
-                              className={`w-2 h-2 rounded-full transition ${
-                                idx === currentImageIndex ? 'bg-white w-8' : 'bg-white/50'
-                              }`}
+                              className={`w-2 h-2 rounded-full transition ${idx === currentImageIndex ? 'bg-white w-8' : 'bg-white/50'
+                                }`}
                             />
                           ))}
                         </div>
@@ -306,9 +305,8 @@ export default function ItemDetail() {
                     <button
                       key={idx}
                       onClick={() => setCurrentImageIndex(idx)}
-                      className={`flex-shrink-0 rounded-lg overflow-hidden border-2 transition ${
-                        idx === currentImageIndex ? 'border-blue-500' : 'border-transparent'
-                      }`}
+                      className={`flex-shrink-0 rounded-lg overflow-hidden border-2 transition ${idx === currentImageIndex ? 'border-blue-500' : 'border-transparent'
+                        }`}
                     >
                       <img
                         src={`http://localhost:5000${img.image_url}`}
@@ -352,7 +350,7 @@ export default function ItemDetail() {
                         </div>
                         {getStatusBadge(offer.status)}
                       </div>
-                      
+
                       <div className="flex flex-col sm:flex-row gap-2">
                         {offer.status === 'pending' && (
                           <button
@@ -362,7 +360,7 @@ export default function ItemDetail() {
                             <X className="w-4 h-4 md:w-5 md:h-5" /> Visszavonás
                           </button>
                         )}
-                        
+
                         {offer.status === 'counter_offered' && (
                           <>
                             <button
@@ -406,12 +404,12 @@ export default function ItemDetail() {
                         </div>
                         {getStatusBadge(offer.status)}
                       </div>
-                      
+
                       <div className="flex items-center justify-between">
                         <p className="text-2xl font-bold text-white">
                           {offer.offer_price.toLocaleString()} Ft
                         </p>
-                        
+
                         {offer.status === 'pending' && (
                           <div className="flex flex-col sm:flex-row gap-2">
                             <button
@@ -449,7 +447,7 @@ export default function ItemDetail() {
           <div className="lg:col-span-1">
             <div className="bg-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-2xl lg:sticky lg:top-20">
               <h1 className="text-xl md:text-2xl font-bold text-white mb-3 md:mb-4">{item.title}</h1>
-              
+
               <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-4 md:p-6 mb-4 md:mb-6 text-center">
                 <p className="text-blue-100 text-xs md:text-sm mb-1">Ár</p>
                 <p className="text-3xl md:text-5xl font-bold text-white">{item.price.toLocaleString()}</p>
@@ -501,7 +499,7 @@ export default function ItemDetail() {
                     className="w-full bg-gray-700 hover:bg-gray-600 text-white py-3 md:py-4 rounded-xl font-semibold transition shadow-lg flex items-center justify-center gap-2 text-sm md:text-base"
                   >
                     <Heart className={`w-4 h-4 md:w-5 md:h-5 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
-                    {isFavorite ? 'Kedvencekben' : 'Kedvencekhez'} 
+                    {isFavorite ? 'Kedvencekben' : 'Kedvencekhez'}
                     <span className="bg-gray-800 px-2 py-0.5 rounded-full text-xs ml-1">
                       {item.favorites_count || 0}
                     </span>
@@ -536,7 +534,7 @@ export default function ItemDetail() {
           <div className="bg-gray-800 rounded-2xl p-8 max-w-md w-full shadow-2xl border border-gray-700">
             <h2 className="text-3xl font-bold text-white mb-2">Árajánlat küldése</h2>
             <p className="text-gray-400 mb-6">Ajánld meg az árat, amit szeretnél fizetni</p>
-            
+
             <div className="bg-gray-700 rounded-xl p-4 mb-4">
               <p className="text-gray-400 text-sm">Eredeti ár</p>
               <p className="text-white text-2xl font-bold">{item.price.toLocaleString()} Ft</p>
@@ -597,7 +595,7 @@ export default function ItemDetail() {
           <div className="bg-gray-800 rounded-2xl p-8 max-w-md w-full shadow-2xl border border-gray-700">
             <h2 className="text-3xl font-bold text-white mb-2">Visszaajánlat</h2>
             <p className="text-gray-400 mb-6">Add meg a saját ajánlatodat</p>
-            
+
             <div className="bg-gray-700 rounded-xl p-4 mb-4">
               <p className="text-gray-400 text-sm">Eredeti ár</p>
               <p className="text-white text-2xl font-bold">{item.price.toLocaleString()} Ft</p>
