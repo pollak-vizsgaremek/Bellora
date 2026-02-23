@@ -13,6 +13,7 @@ import favoriteRoutes from './routes/favoriteRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
 import offerRoutes from './routes/offerRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 import { authenticateToken } from './middleware/auth.js';
 import { getMyItems } from './controllers/itemController.js';
 import { getConversations } from './controllers/messageController.js';
@@ -44,6 +45,7 @@ app.use('/api/favorites', favoriteRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/offers', offerRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.get('/api/my-items', authenticateToken, getMyItems);
 app.get('/api/conversations', authenticateToken, getConversations);

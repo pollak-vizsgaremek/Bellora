@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useAuth } from '../hooks/useAuth';
 import { useAlert } from '../context/AlertContext';
 import api from '../services/api';
@@ -101,7 +101,7 @@ export default function Favorites() {
                   <div className="relative">
                     {item.image_url ? (
                       <img
-                        src={`http://localhost:5000${item.image_url}`}
+                        src={`${import.meta.env.VITE_BASE_URL}${item.image_url}`}
                         alt={item.title}
                         className="w-full h-56 object-cover"
                       />
@@ -131,7 +131,7 @@ export default function Favorites() {
                     <div className="flex items-center gap-2 mb-2 md:mb-3">
                       {item.seller_image ? (
                         <img 
-                          src={`http://localhost:5000${item.seller_image}`}
+                          src={`${import.meta.env.VITE_BASE_URL}${item.seller_image}`}
                           alt={item.seller_name}
                           className="w-6 h-6 rounded-full object-cover"
                         />

@@ -43,6 +43,11 @@ export const createItem = async (req, res) => {
   try {
     const db = getDB();
     const { title, description, price, category_id } = req.body;
+    
+    if (!price || parseFloat(price) <= 0) {
+      return res.status(400).json({ message: 'Az árnak nullánál nagyobbnak kell lennie' });
+    }
+    
     const [result] = await db.execute(
       'INSERT INTO items (user_id, category_id, title, description, price) VALUES (?, ?, ?, ?, ?)',
       [req.user.user_id, category_id || 1, title, description, price]
@@ -59,6 +64,10 @@ export const updateItem = async (req, res) => {
     const db = getDB();
     const { title, description, price, category_id, status } = req.body;
     const { id } = req.params;
+    
+    if (!price || parseFloat(price) <= 0) {
+      return res.status(400).json({ message: 'Az árnak nullánál nagyobbnak kell lennie' });
+    }
     
     const [items] = await db.execute('SELECT user_id FROM items WHERE item_id = ?', [id]);
     

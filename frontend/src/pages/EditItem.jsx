@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import { useAuth } from '../hooks/useAuth';
 import { useAlert } from '../context/AlertContext';
 import api from '../services/api';
@@ -156,6 +156,11 @@ export default function EditItem() {
       alertError('Kérlek töltsd ki a kötelező mezőket!');
       return;
     }
+    
+    if (!formData.price || parseFloat(formData.price) <= 0) {
+      alertError('Az árnak nullánál nagyobbnak kell lennie!');
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -250,7 +255,7 @@ export default function EditItem() {
                   placeholder="10000"
                   className="w-full px-4 py-3 bg-gray-700 text-white border border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
-                  min="0"
+                  min="1"
                 />
               </div>
 
@@ -303,7 +308,7 @@ export default function EditItem() {
                         <span className="text-xs font-bold">#{index + 1}</span>
                       </div>
                       <img
-                        src={`http://localhost:5000${img.image_url}`}
+                        src={`${import.meta.env.VITE_BASE_URL}${img.image_url}`}
                         alt="Item"
                         className="w-full h-32 object-cover rounded-lg border-2 border-gray-600"
                       />

@@ -220,7 +220,7 @@ export default function Profile() {
                 <div className="relative mb-4">
                   {imagePreview || profileImage ? (
                     <img
-                      src={imagePreview || `http://localhost:5000${profileImage}`}
+                      src={imagePreview || `${import.meta.env.VITE_BASE_URL}${profileImage}`}
                       alt="Profilkép"
                       className="w-24 h-24 rounded-full object-cover border-4 border-blue-500"
                     />

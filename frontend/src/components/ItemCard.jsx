@@ -10,7 +10,7 @@ export default function ItemCard({ item }) {
     >
       {item.image_url ? (
         <img
-          src={`http://localhost:5000${item.image_url}`}
+          src={`${import.meta.env.VITE_BASE_URL}${item.image_url}`}
           alt={item.title}
           className="w-full h-40 sm:h-48 md:h-52 object-cover group-hover:scale-105 transition-transform duration-200"
         />

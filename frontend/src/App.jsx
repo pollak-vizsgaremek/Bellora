@@ -19,7 +19,7 @@ function App() {
     <div className="bg-gray-900 min-h-screen text-white">
       <AlertProvider>
         <AuthProvider>
-          <Router>
+          <BrowserRouter>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
@@ -63,7 +63,7 @@ function App() {
               <Route path="/user/:userId" element={<PublicProfile />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
-          </Router>
+          </BrowserRouter>
         </AuthProvider>
       </AlertProvider>
     </div>

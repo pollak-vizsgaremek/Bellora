@@ -26,7 +26,7 @@ export default function Messages() {
 
     loadConversations();
 
-    const newSocket = io('http://localhost:5000');
+    const newSocket = io(import.meta.env.VITE_BASE_URL);
     setSocket(newSocket);
 
     newSocket.emit('user_connected', user.user_id);

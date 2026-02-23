@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router';
 import { useAuth } from '../hooks/useAuth';
-import { useState, useEffect } from 'react';
-import { Home, Package, MessageCircle, Heart, Plus, User, LogOut, ChevronDown, Menu, X, Bell } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Home, Package, MessageCircle, Heart, Plus, User, LogOut, ChevronDown, Menu, X, Bell, ShoppingBag, Star } from 'lucide-react';
 import api from '../services/api';
 
 export default function Navbar() {
@@ -9,15 +9,34 @@ export default function Navbar() {
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [unreadOffers, setUnreadOffers] = useState(0);
+  const [notifications, setNotifications] = useState([]);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const notificationRef = useRef(null);
 
   useEffect(() => {
     if (user) {
       loadUnreadOffers();
-      const interval = setInterval(loadUnreadOffers, 30000);
+      loadNotifications();
+      const interval = setInterval(() => {
+        loadUnreadOffers();
+        loadNotifications();
+      }, 30000);
       return () => clearInterval(interval);
     }
   }, [user]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setShowNotifications(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const loadUnreadOffers = async () => {
     try {
@@ -25,6 +44,16 @@ export default function Navbar() {
       setUnreadOffers(response.data.count);
     } catch (error) {
       console.error('Error loading unread offers:', error);
+    }
+  };
+
+  const loadNotifications = async () => {
+    try {
+      const response = await api.get('/notifications');
+      setNotifications(response.data.notifications);
+      setNotificationCount(response.data.count);
+    } catch (error) {
+      console.error('Error loading notifications:', error);
     }
   };
 
@@ -67,17 +96,96 @@ export default function Navbar() {
                   <Plus size={18} /> Új hirdetés
                 </button>
 
-                <button
-                  onClick={() => navigate('/messages')}
-                  className="relative text-gray-300 hover:text-white transition p-2"
-                >
-                  <Bell size={22} />
-                  {unreadOffers > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                      {unreadOffers > 9 ? '9+' : unreadOffers}
-                    </span>
+                {/* Notification Dropdown */}
+                <div className="relative" ref={notificationRef}>
+                  <button
+                    onClick={() => setShowNotifications(!showNotifications)}
+                    className="relative text-gray-300 hover:text-white transition p-2 rounded-full hover:bg-gray-800"
+                  >
+                    <Bell size={22} />
+                    {notificationCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                        {notificationCount > 9 ? '9+' : notificationCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {showNotifications && (
+                    <div className="absolute right-0 mt-2 w-80 bg-gray-800 rounded-lg shadow-xl border border-gray-700 max-h-96 overflow-y-auto">
+                      <div className="p-3 border-b border-gray-700 sticky top-0 bg-gray-800">
+                        <h3 className="text-white font-semibold">Értesítések</h3>
+                      </div>
+                      
+                      {notifications.length === 0 ? (
+                        <div className="p-4 text-center text-gray-400">
+                          Nincs új értesítés
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-gray-700">
+                          {notifications.map((notif, index) => (
+                            <div
+                              key={`${notif.type}-${notif.item_id}-${index}`}
+                              className="p-3 hover:bg-gray-700 transition cursor-pointer"
+                              onClick={() => {
+                                navigate(`/item/${notif.item_id}`);
+                                setShowNotifications(false);
+                              }}
+                            >
+                              <div className="flex items-start gap-3">
+                                {notif.favoriter_image || notif.buyer_image ? (
+                                  <img
+                                    src={`${import.meta.env.VITE_BASE_URL}${notif.favoriter_image || notif.buyer_image}`}
+                                    alt=""
+                                    className="w-10 h-10 rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                    {(notif.favoriter_name || notif.buyer_name)?.charAt(0).toUpperCase()}
+                                  </div>
+                                )}
+                                
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    {notif.type === 'favorite' && (
+                                      <Heart size={14} className="text-pink-400 flex-shrink-0" fill="currentColor" />
+                                    )}
+                                    {notif.type === 'order' && (
+                                      <ShoppingBag size={14} className="text-green-400 flex-shrink-0" />
+                                    )}
+                                    {notif.type === 'offer' && (
+                                      <Star size={14} className="text-yellow-400 flex-shrink-0" />
+                                    )}
+                                    <span className="text-white text-sm font-medium truncate">
+                                      {notif.favoriter_name || notif.buyer_name}
+                                    </span>
+                                  </div>
+                                  
+                                  <p className="text-gray-300 text-xs">
+                                    {notif.type === 'favorite' && 'kedvencnek jelölte: '}
+                                    {notif.type === 'order' && 'megrendelte: '}
+                                    {notif.type === 'offer' && `ajánlatot tett (${notif.offer_price.toLocaleString()} Ft): `}
+                                    <span className="text-gray-400">{notif.item_title}</span>
+                                  </p>
+                                  
+                                  {notif.type === 'order' && (
+                                    <span className={`text-xs px-2 py-0.5 rounded-full inline-block mt-1 ${
+                                      notif.order_status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                                      notif.order_status === 'completed' ? 'bg-green-500/20 text-green-400' :
+                                      'bg-red-500/20 text-red-400'
+                                    }`}>
+                                      {notif.order_status === 'pending' ? 'Folyamatban' :
+                                       notif.order_status === 'completed' ? 'Teljesítve' : 'Törölve'}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   )}
-                </button>
+                </div>
 
                 <div className="relative">
                   <button
@@ -86,7 +194,7 @@ export default function Navbar() {
                   >
                     {user.profile_image ? (
                       <img
-                        src={`http://localhost:5000${user.profile_image}`}
+                        src={`${import.meta.env.VITE_BASE_URL}${user.profile_image}`}
                         alt={user.username}
                         className="w-8 h-8 rounded-full object-cover"
                       />

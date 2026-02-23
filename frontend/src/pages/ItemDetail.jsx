@@ -258,7 +258,7 @@ export default function ItemDetail() {
                 {item.images && item.images.length > 0 ? (
                   <>
                     <img
-                      src={`http://localhost:5000${item.images[currentImageIndex].image_url}`}
+                      src={`${import.meta.env.VITE_BASE_URL}${item.images[currentImageIndex].image_url}`}
                       alt={item.title}
                       className="w-full h-64 md:h-96 lg:h-[500px] object-cover"
                     />
@@ -309,7 +309,7 @@ export default function ItemDetail() {
                         }`}
                     >
                       <img
-                        src={`http://localhost:5000${img.image_url}`}
+                        src={`${import.meta.env.VITE_BASE_URL}${img.image_url}`}
                         alt=""
                         className="w-20 h-20 object-cover"
                       />

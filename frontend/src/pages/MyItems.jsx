@@ -161,7 +161,7 @@ export default function MyItems() {
                 <div className="relative">
                   {item.image_url ? (
                     <img
-                      src={`http://localhost:5000${item.image_url}`}
+                      src={`${import.meta.env.VITE_BASE_URL}${item.image_url}`}
                       alt={item.title}
                       className="w-full h-56 object-cover"
                     />

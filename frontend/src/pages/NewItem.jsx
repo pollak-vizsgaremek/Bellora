@@ -34,6 +34,12 @@ export default function NewItem() {
         e.preventDefault();
         setLoading(true);
 
+        if (!price || parseFloat(price) <= 0) {
+            alertError('Az árnak nullánál nagyobbnak kell lennie!');
+            setLoading(false);
+            return;
+        }
+
         try {
             const response = await api.post('/items', {
                 title,
@@ -136,10 +142,10 @@ export default function NewItem() {
                                 type="number"
                                 value={price}
                                 onChange={(e) => setPrice(e.target.value)}
-                                placeholder="0"
+                                placeholder="1000"
                                 className="w-full px-3 md:px-4 py-2 md:py-3 text-sm md:text-base bg-gray-700 text-white border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 required
-                                min="0"
+                                min="1"
                             />
                         </div>
 

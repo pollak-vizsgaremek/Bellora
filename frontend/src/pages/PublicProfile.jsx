@@ -73,7 +73,7 @@ export default function PublicProfile() {
             <div className="relative flex-shrink-0">
               {profile.profile_image ? (
                 <img
-                  src={`http://localhost:5000${profile.profile_image}`}
+                  src={`${import.meta.env.VITE_BASE_URL}${profile.profile_image}`}
                   alt={profile.username}
                   className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-white shadow-2xl"
                 />
@@ -154,7 +154,7 @@ export default function PublicProfile() {
                 <div className="relative">
                   {item.image_url ? (
                     <img
-                      src={`http://localhost:5000${item.image_url}`}
+                      src={`${import.meta.env.VITE_BASE_URL}${item.image_url}`}
                       alt={item.title}
                       className="w-full h-56 object-cover"
                     />
