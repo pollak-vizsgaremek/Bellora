@@ -22,7 +22,6 @@ export default function ItemDetail() {
   const [showCounterModal, setShowCounterModal] = useState(false);
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState(null);
-  const [dailyLimit, setDailyLimit] = useState({ used: 0, remaining: 20, limit: 20 });
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
 
@@ -30,7 +29,6 @@ export default function ItemDetail() {
     loadItem();
     if (user) {
       loadOffers();
-      loadDailyLimit();
       checkIfFavorite();
     }
   }, [id, user]);
@@ -48,15 +46,6 @@ export default function ItemDetail() {
     try {
       const response = await api.get(`/offers/item/${id}`);
       setOffers(response.data.offers);
-    } catch (error) {
-      console.error('Hiba:', error);
-    }
-  };
-
-  const loadDailyLimit = async () => {
-    try {
-      const response = await api.get('/offers/daily-count');
-      setDailyLimit(response.data);
     } catch (error) {
       console.error('Hiba:', error);
     }
@@ -83,21 +72,15 @@ export default function ItemDetail() {
 
     const minPrice = item.price * 0.7;
 
-    if (dailyLimit.remaining <= 0) {
-      alertError('Elérted a napi 20 ajánlat limitet!');
-      return;
-    }
-
     try {
       const response = await api.post('/offers', {
         item_id: id,
         offer_price: offerPrice
       });
-      success(`Árajánlat elküldve! Még ${response.data.remaining_offers} ajánlatod maradt ma.`);
+      success('Árajánlat elküldve!');
       setShowOfferModal(false);
       setOfferPrice('');
       loadOffers();
-      loadDailyLimit();
     } catch (err) {
       alertError(err.response?.data?.message || 'Hiba történt');
     }
@@ -166,7 +149,6 @@ export default function ItemDetail() {
       await api.delete(`/offers/${offerId}`);
       info('Árajánlat törölve!');
       loadOffers();
-      loadDailyLimit();
     } catch (err) {
       alertError('Hiba történt');
     }
@@ -351,7 +333,7 @@ export default function ItemDetail() {
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
                         <div>
                           <p className="text-white font-semibold text-base md:text-lg">
-                            Eredeti: {offer.offer_price.toLocaleString()} Ft
+                            Ajánlatod: {offer.offer_price.toLocaleString()} Ft
                           </p>
                           {offer.status === 'counter_offered' && offer.counter_price && (
                             <p className="text-yellow-400 font-semibold text-sm md:text-base">
@@ -534,16 +516,6 @@ export default function ItemDetail() {
                       {item.favorites_count || 0}
                     </span>
                   </button>
-
-                  {dailyLimit && (
-                    <div className="bg-gray-700 rounded-xl p-3 md:p-4 text-center">
-                      <p className="text-gray-400 text-xs md:text-sm mb-1">Mai ajánlatok</p>
-                      <p className="text-white font-bold text-xl md:text-2xl">
-                        {dailyLimit.remaining} / {dailyLimit.limit}
-                      </p>
-                      <p className="text-gray-500 text-xs mt-1">maradt ma</p>
-                    </div>
-                  )}
                 </div>
               )}
 
@@ -633,15 +605,6 @@ export default function ItemDetail() {
               />
               <p className="text-gray-500 text-xs mt-2">Maximum 30% kedvezményt adhatsz</p>
             </div>
-
-            {dailyLimit.remaining <= 5 && (
-              <div className="bg-yellow-900/30 border border-yellow-700 rounded-xl p-3 mb-4 flex items-start gap-2">
-                <AlertCircle className="text-yellow-500 flex-shrink-0 mt-0.5" size={20} />
-                <p className="text-yellow-300 text-sm">
-                  Csak {dailyLimit.remaining} ajánlatod maradt ma!
-                </p>
-              </div>
-            )}
 
             <div className="flex gap-3">
               <button

@@ -8,25 +8,14 @@ export const createOffer = async (req, res) => {
     const connectedUsers = getConnectedUsers();
     const { item_id, offer_price } = req.body;
     
-    const [users] = await db.execute(
-      'SELECT daily_offers_count, last_offer_reset FROM users WHERE user_id = ?',
-      [req.user.user_id]
+    // Check if user already has a pending offer for this item
+    const [existingOffers] = await db.execute(
+      'SELECT offer_id FROM offers WHERE item_id = ? AND buyer_id = ? AND status = "pending"',
+      [item_id, req.user.user_id]
     );
     
-    const user = users[0];
-    const today = new Date().toISOString().split('T')[0];
-    
-    let currentCount = user.daily_offers_count || 0;
-    if (user.last_offer_reset !== today) {
-      currentCount = 0;
-      await db.execute(
-        'UPDATE users SET daily_offers_count = 0, last_offer_reset = ? WHERE user_id = ?',
-        [today, req.user.user_id]
-      );
-    }
-    
-    if (currentCount >= 20) {
-      return res.status(429).json({ message: 'Elérted a napi 20 ajánlat limitet!' });
+    if (existingOffers.length > 0) {
+      return res.status(400).json({ message: 'Már van érvényes ajánlatod erre a termékre!' });
     }
     
     const [items] = await db.execute('SELECT user_id, price, title FROM items WHERE item_id = ?', [item_id]);
@@ -41,19 +30,9 @@ export const createOffer = async (req, res) => {
     
     const minPrice = items[0].price * 0.7;
     
-    await db.execute(
-      'UPDATE offers SET status = "cancelled" WHERE item_id = ? AND buyer_id = ? AND status = "pending"',
-      [item_id, req.user.user_id]
-    );
-    
     const [result] = await db.execute(
       'INSERT INTO offers (item_id, buyer_id, seller_id, offer_price) VALUES (?, ?, ?, ?)',
       [item_id, req.user.user_id, items[0].user_id, offer_price]
-    );
-    
-    await db.execute(
-      'UPDATE users SET daily_offers_count = daily_offers_count + 1, last_offer_reset = ? WHERE user_id = ?',
-      [today, req.user.user_id]
     );
     
     const [messageResult] = await db.execute(
@@ -95,8 +74,7 @@ export const createOffer = async (req, res) => {
     
     res.json({ 
       message: 'Árajánlat elküldve!', 
-      offer_id: result.insertId,
-      remaining_offers: 20 - (currentCount + 1)
+      offer_id: result.insertId
     });
   } catch (error) {
     console.error(error);
@@ -118,37 +96,6 @@ export const getOffersByItem = async (req, res) => {
     `, [req.params.itemId, req.user.user_id, req.user.user_id]);
     
     res.json({ offers });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Szerver hiba' });
-  }
-};
-
-export const getDailyOfferCount = async (req, res) => {
-  try {
-    const db = getDB();
-    const [users] = await db.execute(
-      'SELECT daily_offers_count, last_offer_reset FROM users WHERE user_id = ?',
-      [req.user.user_id]
-    );
-    
-    const user = users[0];
-    const today = new Date().toISOString().split('T')[0];
-    
-    let currentCount = user.daily_offers_count || 0;
-    if (user.last_offer_reset !== today) {
-      currentCount = 0;
-      await db.execute(
-        'UPDATE users SET daily_offers_count = 0, last_offer_reset = ? WHERE user_id = ?',
-        [today, req.user.user_id]
-      );
-    }
-    
-    res.json({ 
-      used: currentCount, 
-      remaining: 20 - currentCount,
-      limit: 20
-    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Szerver hiba' });

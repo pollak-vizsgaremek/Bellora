@@ -2,7 +2,6 @@ import express from 'express';
 import { 
   createOffer, 
   getOffersByItem, 
-  getDailyOfferCount,
   acceptOffer,
   rejectOffer,
   counterOffer,
@@ -16,7 +15,6 @@ const router = express.Router();
 
 router.post('/', authenticateToken, createOffer);
 router.get('/item/:itemId', authenticateToken, getOffersByItem);
-router.get('/daily-count', authenticateToken, getDailyOfferCount);
 router.get('/unread-count', authenticateToken, getUnreadOfferCount);
 router.put('/:offerId/accept', authenticateToken, acceptOffer);
 router.put('/:offerId/reject', authenticateToken, rejectOffer);
