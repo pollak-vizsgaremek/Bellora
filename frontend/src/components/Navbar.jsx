@@ -13,6 +13,11 @@ export default function Navbar() {
   const [unreadOffers, setUnreadOffers] = useState(0);
   const [notifications, setNotifications] = useState([]);
   const [notificationCount, setNotificationCount] = useState(0);
+  const [seenKeys, setSeenKeys] = useState(() => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem('seenNotifications') || '[]'));
+    } catch { return new Set(); }
+  });
   const notificationRef = useRef(null);
 
   useEffect(() => {
@@ -47,11 +52,29 @@ export default function Navbar() {
     }
   };
 
+  const getNotifKey = (notif) => {
+    if (notif.type === 'favorite') return `fav-${notif.favoriter_id}-${notif.item_id}`;
+    if (notif.type === 'order') return `ord-${notif.order_id}`;
+    if (notif.type === 'offer') return `off-${notif.offer_id}`;
+    return `${notif.type}-${notif.item_id}`;
+  };
+
+  const markAllSeen = () => {
+    const allKeys = notifications.map(getNotifKey);
+    const updated = new Set([...seenKeys, ...allKeys]);
+    setSeenKeys(updated);
+    localStorage.setItem('seenNotifications', JSON.stringify([...updated]));
+    setNotificationCount(0);
+  };
+
   const loadNotifications = async () => {
     try {
       const response = await api.get('/notifications');
-      setNotifications(response.data.notifications);
-      setNotificationCount(response.data.count);
+      const notifs = response.data.notifications;
+      setNotifications(notifs);
+      const currentSeen = new Set(JSON.parse(localStorage.getItem('seenNotifications') || '[]'));
+      const unseenCount = notifs.filter(n => !currentSeen.has(getNotifKey(n))).length;
+      setNotificationCount(unseenCount);
     } catch (error) {
       console.error('Error loading notifications:', error);
     }
@@ -99,7 +122,11 @@ export default function Navbar() {
                 {/* Notification Dropdown */}
                 <div className="relative" ref={notificationRef}>
                   <button
-                    onClick={() => setShowNotifications(!showNotifications)}
+                    onClick={() => {
+                      const opening = !showNotifications;
+                      setShowNotifications(opening);
+                      if (opening) markAllSeen();
+                    }}
                     className="relative text-gray-300 hover:text-white transition p-2 rounded-full hover:bg-gray-800"
                   >
                     <Bell size={22} />
@@ -122,10 +149,12 @@ export default function Navbar() {
                         </div>
                       ) : (
                         <div className="divide-y divide-gray-700">
-                          {notifications.map((notif, index) => (
+                          {notifications.map((notif, index) => {
+                            const isSeen = seenKeys.has(getNotifKey(notif));
+                            return (
                             <div
                               key={`${notif.type}-${notif.item_id}-${index}`}
-                              className="p-3 hover:bg-gray-700 transition cursor-pointer"
+                              className={`p-3 hover:bg-gray-700 transition cursor-pointer ${isSeen ? 'opacity-60' : ''}`}
                               onClick={() => {
                                 navigate(`/item/${notif.item_id}`);
                                 setShowNotifications(false);
@@ -180,7 +209,8 @@ export default function Navbar() {
                                 </div>
                               </div>
                             </div>
-                          ))}
+                          );
+                          })}
                         </div>
                       )}
                     </div>

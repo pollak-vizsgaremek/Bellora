@@ -8,9 +8,24 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const currentUser = authService.getCurrentUser();
-    setUser(currentUser);
-    setLoading(false);
+    const initUser = async () => {
+      const cachedUser = authService.getCurrentUser();
+      if (cachedUser) {
+        setUser(cachedUser);
+        // Fetch fresh user data from server to keep profile_image etc. in sync
+        try {
+          const { default: api } = await import('../services/api');
+          const response = await api.get('/auth/me');
+          const freshUser = response.data.user;
+          setUser(freshUser);
+          localStorage.setItem('user', JSON.stringify(freshUser));
+        } catch (e) {
+          // token invalid or server down — keep cached user
+        }
+      }
+      setLoading(false);
+    };
+    initUser();
   }, []);
 
   const login = async (email, password) => {
@@ -29,13 +44,21 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  const updateUser = (updatedFields) => {
+    setUser(prev => {
+      const newUser = { ...prev, ...updatedFields };
+      localStorage.setItem('user', JSON.stringify(newUser));
+      return newUser;
+    });
+  };
+
   const logout = () => {
     authService.logout();
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, updateUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

@@ -5,7 +5,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { connectDB } from './config/db.js';
+import prisma from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import itemRoutes from './routes/itemRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
@@ -33,7 +33,14 @@ const io = new Server(httpServer, {
   }
 });
 
-await connectDB();
+// Test Prisma connection
+try {
+  await prisma.$connect();
+  console.log('Adatbázis kapcsolódva (Prisma)');
+} catch (error) {
+  console.error('Adatbázis kapcsolódási hiba:', error);
+  process.exit(1);
+}
 
 app.use(cors());
 app.use(express.json());

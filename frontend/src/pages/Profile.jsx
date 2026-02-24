@@ -7,7 +7,7 @@ import Navbar from '../components/Navbar';
 import { Camera, Check, X, Package, BadgeDollarSign, Heart, MessageCircle, ClipboardList, Plus, Save, Lock, Trash2 } from 'lucide-react';
 
 export default function Profile() {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const { success, error: alertError, info } = useAlert();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -110,6 +110,7 @@ export default function Profile() {
       setProfileImage(response.data.image_url);
       setNewProfileImage(null);
       setImagePreview(null);
+      updateUser({ profile_image: response.data.image_url });
       setMessage('Profilkép sikeresen feltöltve!');
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
@@ -133,6 +134,7 @@ export default function Profile() {
         postal_code: postalCode
       });
 
+      updateUser({ full_name: fullName, phone, address, city, postal_code: postalCode });
       setMessage('Profil sikeresen frissítve!');
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {

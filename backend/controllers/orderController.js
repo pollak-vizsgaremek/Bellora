@@ -1,22 +1,17 @@
-import { getDB } from '../config/db.js';
+import prisma from '../config/db.js';
 
 export const createOrder = async (req, res) => {
   try {
-    const db = getDB();
-    const { item_id } = req.body;
+    const item_id = parseInt(req.body.item_id);
     const buyer_id = req.user.user_id;
 
-    // Check if item exists and is available
-    const [items] = await db.execute(
-      'SELECT * FROM items WHERE item_id = ?',
-      [item_id]
-    );
+    const item = await prisma.items.findUnique({
+      where: { item_id }
+    });
 
-    if (items.length === 0) {
+    if (!item) {
       return res.status(404).json({ message: 'Termék nem található' });
     }
-
-    const item = items[0];
 
     if (item.status !== 'available') {
       return res.status(400).json({ message: 'Ez a termék már nem elérhető' });
@@ -26,21 +21,28 @@ export const createOrder = async (req, res) => {
       return res.status(400).json({ message: 'Nem vásárolhatod meg a saját termékedet' });
     }
 
-    // Create order
-    const [result] = await db.execute(
-      'INSERT INTO orders (buyer_id, seller_id, item_id, status) VALUES (?, ?, ?, ?)',
-      [buyer_id, item.user_id, item_id, 'pending']
-    );
+    // Create order and update item status in a transaction
+    const order = await prisma.$transaction(async (tx) => {
+      const newOrder = await tx.orders.create({
+        data: {
+          buyer_id,
+          seller_id: item.user_id,
+          item_id,
+          status: 'pending'
+        }
+      });
 
-    // Update item status to sold
-    await db.execute(
-      'UPDATE items SET status = ? WHERE item_id = ?',
-      ['sold', item_id]
-    );
+      await tx.items.update({
+        where: { item_id },
+        data: { status: 'sold' }
+      });
+
+      return newOrder;
+    });
 
     res.json({ 
       message: 'Vásárlás sikeres!',
-      order_id: result.insertId
+      order_id: order.order_id
     });
   } catch (error) {
     console.error(error);
@@ -50,29 +52,41 @@ export const createOrder = async (req, res) => {
 
 export const getMyOrders = async (req, res) => {
   try {
-    const db = getDB();
     const userId = req.user.user_id;
 
-    const [orders] = await db.execute(`
-      SELECT 
-        o.order_id,
-        o.item_id,
-        o.order_date,
-        o.status,
-        i.title,
-        i.price,
-        i.description,
-        u.username as seller_name,
-        u.user_id as seller_id,
-        (SELECT image_url FROM itemimages WHERE item_id = i.item_id ORDER BY is_primary DESC, display_order LIMIT 1) as image_url
-      FROM orders o
-      JOIN items i ON o.item_id = i.item_id
-      JOIN users u ON o.seller_id = u.user_id
-      WHERE o.buyer_id = ?
-      ORDER BY o.order_date DESC
-    `, [userId]);
+    const orders = await prisma.orders.findMany({
+      where: { buyer_id: userId },
+      include: {
+        items: {
+          include: {
+            itemimages: {
+              orderBy: [{ is_primary: 'desc' }, { display_order: 'asc' }],
+              take: 1,
+              select: { image_url: true }
+            }
+          }
+        },
+        users_orders_seller_idTousers: {
+          select: { username: true, user_id: true }
+        }
+      },
+      orderBy: { order_date: 'desc' }
+    });
 
-    res.json({ orders });
+    const result = orders.map(o => ({
+      order_id: o.order_id,
+      item_id: o.item_id,
+      order_date: o.order_date,
+      status: o.status,
+      title: o.items.title,
+      price: o.items.price,
+      description: o.items.description,
+      seller_name: o.users_orders_seller_idTousers.username,
+      seller_id: o.users_orders_seller_idTousers.user_id,
+      image_url: o.items.itemimages[0]?.image_url || null
+    }));
+
+    res.json({ orders: result });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Szerver hiba' });
@@ -81,29 +95,41 @@ export const getMyOrders = async (req, res) => {
 
 export const getMySales = async (req, res) => {
   try {
-    const db = getDB();
     const userId = req.user.user_id;
 
-    const [sales] = await db.execute(`
-      SELECT 
-        o.order_id,
-        o.item_id,
-        o.order_date,
-        o.status,
-        i.title,
-        i.price,
-        i.description,
-        u.username as buyer_name,
-        u.user_id as buyer_id,
-        (SELECT image_url FROM itemimages WHERE item_id = i.item_id ORDER BY is_primary DESC, display_order LIMIT 1) as image_url
-      FROM orders o
-      JOIN items i ON o.item_id = i.item_id
-      JOIN users u ON o.buyer_id = u.user_id
-      WHERE o.seller_id = ?
-      ORDER BY o.order_date DESC
-    `, [userId]);
+    const sales = await prisma.orders.findMany({
+      where: { seller_id: userId },
+      include: {
+        items: {
+          include: {
+            itemimages: {
+              orderBy: [{ is_primary: 'desc' }, { display_order: 'asc' }],
+              take: 1,
+              select: { image_url: true }
+            }
+          }
+        },
+        users_orders_buyer_idTousers: {
+          select: { username: true, user_id: true }
+        }
+      },
+      orderBy: { order_date: 'desc' }
+    });
 
-    res.json({ sales });
+    const result = sales.map(o => ({
+      order_id: o.order_id,
+      item_id: o.item_id,
+      order_date: o.order_date,
+      status: o.status,
+      title: o.items.title,
+      price: o.items.price,
+      description: o.items.description,
+      buyer_name: o.users_orders_buyer_idTousers.username,
+      buyer_id: o.users_orders_buyer_idTousers.user_id,
+      image_url: o.items.itemimages[0]?.image_url || null
+    }));
+
+    res.json({ sales: result });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Szerver hiba' });
@@ -112,29 +138,27 @@ export const getMySales = async (req, res) => {
 
 export const updateOrderStatus = async (req, res) => {
   try {
-    const db = getDB();
-    const { id } = req.params;
+    const id = parseInt(req.params.id);
     const { status } = req.body;
     const userId = req.user.user_id;
 
-    // Verify the user is the seller
-    const [orders] = await db.execute(
-      'SELECT seller_id FROM orders WHERE order_id = ?',
-      [id]
-    );
+    const order = await prisma.orders.findUnique({
+      where: { order_id: id },
+      select: { seller_id: true }
+    });
 
-    if (orders.length === 0) {
+    if (!order) {
       return res.status(404).json({ message: 'Rendelés nem található' });
     }
 
-    if (orders[0].seller_id !== userId) {
+    if (order.seller_id !== userId) {
       return res.status(403).json({ message: 'Nincs jogosultságod módosítani ezt a rendelést' });
     }
 
-    await db.execute(
-      'UPDATE orders SET status = ? WHERE order_id = ?',
-      [status, id]
-    );
+    await prisma.orders.update({
+      where: { order_id: id },
+      data: { status }
+    });
 
     res.json({ message: 'Rendelés státusz frissítve' });
   } catch (error) {

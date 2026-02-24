@@ -1,0 +1,218 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model categories {
+  category_id      Int          @id @default(autoincrement())
+  name             String       @db.VarChar(100)
+  parent_id        Int?
+  categories       categories?  @relation("categoriesTocategories", fields: [parent_id], references: [category_id], onUpdate: NoAction, map: "categories_ibfk_1")
+  other_categories categories[] @relation("categoriesTocategories")
+  items            items[]
+
+  @@index([parent_id], map: "parent_id")
+}
+
+model favorites {
+  user_id Int
+  item_id Int
+  users   users @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "favorites_ibfk_1")
+  items   items @relation(fields: [item_id], references: [item_id], onDelete: Cascade, onUpdate: NoAction, map: "favorites_ibfk_2")
+
+  @@id([user_id, item_id])
+  @@index([item_id], map: "idx_item_id")
+}
+
+model itemimages {
+  image_id      Int       @id @default(autoincrement())
+  item_id       Int
+  image_url     String    @db.VarChar(500)
+  is_primary    Boolean?  @default(false)
+  display_order Int?      @default(0)
+  uploaded_at   DateTime? @default(now()) @db.Timestamp(0)
+  items         items     @relation(fields: [item_id], references: [item_id], onDelete: Cascade, onUpdate: NoAction, map: "itemimages_ibfk_1")
+
+  @@index([is_primary], map: "idx_is_primary")
+  @@index([item_id], map: "idx_item_id")
+}
+
+model items {
+  item_id     Int           @id @default(autoincrement())
+  user_id     Int
+  category_id Int
+  title       String        @db.VarChar(150)
+  description String?       @db.Text
+  price       Decimal       @db.Decimal(15, 2)
+  status      items_status? @default(available)
+  created_at  DateTime?     @default(now()) @db.Timestamp(0)
+  favorites   favorites[]
+  itemimages  itemimages[]
+  users       users         @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "items_ibfk_1")
+  categories  categories    @relation(fields: [category_id], references: [category_id], onUpdate: NoAction, map: "items_ibfk_2")
+  offers      offers[]
+  orders      orders[]
+
+  @@index([category_id], map: "idx_category_id")
+  @@index([status], map: "idx_status")
+  @@index([user_id], map: "idx_user_id")
+}
+
+model messages {
+  message_id                        Int       @id @default(autoincrement())
+  sender_id                         Int
+  receiver_id                       Int
+  content                           String    @db.Text
+  sent_at                           DateTime? @default(now()) @db.Timestamp(0)
+  offer_id                          Int?
+  offers                            offers?   @relation(fields: [offer_id], references: [offer_id], onUpdate: NoAction, map: "fk_messages_offer")
+  users_messages_sender_idTousers   users     @relation("messages_sender_idTousers", fields: [sender_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "messages_ibfk_1")
+  users_messages_receiver_idTousers users     @relation("messages_receiver_idTousers", fields: [receiver_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "messages_ibfk_2")
+
+  @@index([offer_id], map: "fk_messages_offer")
+  @@index([receiver_id], map: "idx_receiver_id")
+  @@index([sender_id], map: "idx_sender_id")
+}
+
+model offers {
+  offer_id                      Int           @id @default(autoincrement())
+  item_id                       Int
+  buyer_id                      Int
+  seller_id                     Int
+  offer_price                   Decimal       @db.Decimal(15, 2)
+  status                        offers_status @default(pending)
+  counter_price                 Decimal?      @db.Decimal(15, 2)
+  created_at                    DateTime?     @default(now()) @db.Timestamp(0)
+  updated_at                    DateTime?     @default(now()) @db.Timestamp(0)
+  messages                      messages[]
+  items                         items         @relation(fields: [item_id], references: [item_id], onDelete: Cascade, onUpdate: NoAction, map: "offers_ibfk_1")
+  users_offers_buyer_idTousers  users         @relation("offers_buyer_idTousers", fields: [buyer_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "offers_ibfk_2")
+  users_offers_seller_idTousers users         @relation("offers_seller_idTousers", fields: [seller_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "offers_ibfk_3")
+
+  @@index([buyer_id], map: "idx_buyer_id")
+  @@index([item_id], map: "idx_item_id")
+  @@index([seller_id], map: "idx_seller_id")
+  @@index([status], map: "idx_status")
+}
+
+model orders {
+  order_id                      Int            @id @default(autoincrement())
+  buyer_id                      Int
+  seller_id                     Int
+  item_id                       Int
+  order_date                    DateTime?      @default(now()) @db.Timestamp(0)
+  status                        orders_status? @default(pending)
+  users_orders_buyer_idTousers  users          @relation("orders_buyer_idTousers", fields: [buyer_id], references: [user_id], onUpdate: NoAction, map: "orders_ibfk_1")
+  users_orders_seller_idTousers users          @relation("orders_seller_idTousers", fields: [seller_id], references: [user_id], onUpdate: NoAction, map: "orders_ibfk_2")
+  items                         items          @relation(fields: [item_id], references: [item_id], onUpdate: NoAction, map: "orders_ibfk_3")
+  payments                      payments?
+  shipping                      shipping?
+
+  @@index([buyer_id], map: "idx_buyer_id")
+  @@index([item_id], map: "idx_item_id")
+  @@index([seller_id], map: "idx_seller_id")
+  @@index([status], map: "idx_status")
+}
+
+model payments {
+  payment_id Int              @id @default(autoincrement())
+  order_id   Int              @unique(map: "order_id")
+  amount     Decimal          @db.Decimal(10, 2)
+  method     String?          @db.VarChar(50)
+  status     payments_status? @default(pending)
+  created_at DateTime?        @default(now()) @db.Timestamp(0)
+  orders     orders           @relation(fields: [order_id], references: [order_id], onDelete: Cascade, onUpdate: NoAction, map: "payments_ibfk_1")
+
+  @@index([status], map: "idx_status")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model reviews {
+  review_id                             Int       @id @default(autoincrement())
+  reviewer_id                           Int
+  reviewed_user_id                      Int
+  rating                                Int
+  comment                               String?   @db.Text
+  created_at                            DateTime? @default(now()) @db.Timestamp(0)
+  users_reviews_reviewer_idTousers      users     @relation("reviews_reviewer_idTousers", fields: [reviewer_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "reviews_ibfk_1")
+  users_reviews_reviewed_user_idTousers users     @relation("reviews_reviewed_user_idTousers", fields: [reviewed_user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "reviews_ibfk_2")
+
+  @@index([reviewed_user_id], map: "idx_reviewed_user_id")
+  @@index([reviewer_id], map: "idx_reviewer_id")
+}
+
+model shipping {
+  shipping_id     Int              @id @default(autoincrement())
+  order_id        Int              @unique(map: "order_id")
+  address         String           @db.Text
+  carrier         String?          @db.VarChar(50)
+  tracking_number String?          @db.VarChar(100)
+  status          shipping_status? @default(processing)
+  orders          orders           @relation(fields: [order_id], references: [order_id], onDelete: Cascade, onUpdate: NoAction, map: "shipping_ibfk_1")
+
+  @@index([status], map: "idx_status")
+}
+
+model users {
+  user_id                                 Int         @id @default(autoincrement())
+  username                                String      @unique(map: "username") @db.VarChar(50)
+  email                                   String      @unique(map: "email") @db.VarChar(100)
+  password_hash                           String      @db.Text
+  full_name                               String?     @db.VarChar(100)
+  phone                                   String?     @db.VarChar(20)
+  address                                 String?     @db.VarChar(255)
+  city                                    String?     @db.VarChar(100)
+  postal_code                             String?     @db.VarChar(10)
+  join_date                               DateTime?   @default(now()) @db.Timestamp(0)
+  daily_offers_count                      Int?        @default(0)
+  last_offer_reset                        DateTime?   @db.Date
+  profile_image                           String?     @db.VarChar(255)
+  favorites                               favorites[]
+  items                                   items[]
+  messages_messages_sender_idTousers      messages[]  @relation("messages_sender_idTousers")
+  messages_messages_receiver_idTousers    messages[]  @relation("messages_receiver_idTousers")
+  offers_offers_buyer_idTousers           offers[]    @relation("offers_buyer_idTousers")
+  offers_offers_seller_idTousers          offers[]    @relation("offers_seller_idTousers")
+  orders_orders_buyer_idTousers           orders[]    @relation("orders_buyer_idTousers")
+  orders_orders_seller_idTousers          orders[]    @relation("orders_seller_idTousers")
+  reviews_reviews_reviewer_idTousers      reviews[]   @relation("reviews_reviewer_idTousers")
+  reviews_reviews_reviewed_user_idTousers reviews[]   @relation("reviews_reviewed_user_idTousers")
+}
+
+enum payments_status {
+  pending
+  completed
+  failed
+}
+
+enum offers_status {
+  pending
+  accepted
+  rejected
+  counter_offered
+  cancelled
+}
+
+enum shipping_status {
+  processing
+  shipped
+  delivered
+  cancelled
+}
+
+enum orders_status {
+  pending
+  completed
+  cancelled
+}
+
+enum items_status {
+  available
+  sold
+  reserved
+}
