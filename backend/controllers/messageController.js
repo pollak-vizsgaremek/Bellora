@@ -1,29 +1,51 @@
-import { getDB } from '../config/db.js';
+import prisma from '../config/db.js';
 
 export const getMessages = async (req, res) => {
   try {
-    const db = getDB();
-    const [messages] = await db.execute(`
-      SELECT m.*, 
-             u1.username as sender_name, 
-             u2.username as receiver_name, 
-             o.status as offer_status,
-             o.offer_price,
-             o.counter_price,
-             i.item_id,
-             i.title as item_title,
-             i.price as item_price,
-             (SELECT image_url FROM itemimages WHERE item_id = i.item_id ORDER BY is_primary DESC, display_order LIMIT 1) as item_image
-      FROM messages m
-      JOIN users u1 ON m.sender_id = u1.user_id
-      JOIN users u2 ON m.receiver_id = u2.user_id
-      LEFT JOIN offers o ON m.offer_id = o.offer_id
-      LEFT JOIN items i ON o.item_id = i.item_id
-      WHERE (m.sender_id = ? AND m.receiver_id = ?)
-         OR (m.sender_id = ? AND m.receiver_id = ?)
-      ORDER BY m.sent_at ASC
-    `, [req.user.user_id, req.params.userId, req.params.userId, req.user.user_id]);
-    res.json({ messages });
+    const userId = req.user.user_id;
+    const otherUserId = parseInt(req.params.userId);
+
+    const messages = await prisma.messages.findMany({
+      where: {
+        OR: [
+          { sender_id: userId, receiver_id: otherUserId },
+          { sender_id: otherUserId, receiver_id: userId }
+        ]
+      },
+      include: {
+        users_messages_sender_idTousers: { select: { username: true } },
+        users_messages_receiver_idTousers: { select: { username: true } },
+        offers: {
+          select: {
+            status: true,
+            offer_price: true,
+            counter_price: true,
+            items: {
+              select: { item_id: true, title: true, price: true, itemimages: { orderBy: [{ is_primary: 'desc' }, { display_order: 'asc' }], take: 1, select: { image_url: true } } }
+            }
+          }
+        }
+      },
+      orderBy: { sent_at: 'asc' }
+    });
+
+    const result = messages.map(m => ({
+      ...m,
+      sender_name: m.users_messages_sender_idTousers.username,
+      receiver_name: m.users_messages_receiver_idTousers.username,
+      offer_status: m.offers?.status || null,
+      offer_price: m.offers?.offer_price || null,
+      counter_price: m.offers?.counter_price || null,
+      item_id: m.offers?.items?.item_id || null,
+      item_title: m.offers?.items?.title || null,
+      item_price: m.offers?.items?.price || null,
+      item_image: m.offers?.items?.itemimages?.[0]?.image_url || null,
+      users_messages_sender_idTousers: undefined,
+      users_messages_receiver_idTousers: undefined,
+      offers: undefined
+    }));
+
+    res.json({ messages: result });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Szerver hiba' });
@@ -32,12 +54,15 @@ export const getMessages = async (req, res) => {
 
 export const sendMessage = async (req, res) => {
   try {
-    const db = getDB();
-    const { receiver_id, content } = req.body;
-    await db.execute(
-      'INSERT INTO messages (sender_id, receiver_id, content) VALUES (?, ?, ?)',
-      [req.user.user_id, receiver_id, content]
-    );
+    const receiver_id = parseInt(req.body.receiver_id);
+    const { content } = req.body;
+    await prisma.messages.create({
+      data: {
+        sender_id: req.user.user_id,
+        receiver_id,
+        content
+      }
+    });
     res.json({ message: 'Üzenet elküldve' });
   } catch (error) {
     console.error(error);
@@ -47,30 +72,41 @@ export const sendMessage = async (req, res) => {
 
 export const getConversations = async (req, res) => {
   try {
-    const db = getDB();
-    const [conversations] = await db.execute(`
-      SELECT DISTINCT
-        CASE 
-          WHEN m.sender_id = ? THEN m.receiver_id
-          ELSE m.sender_id
-        END as other_user_id,
-        u.username as other_user_name,
-        (SELECT content FROM messages 
-         WHERE (sender_id = ? AND receiver_id = other_user_id) 
-            OR (sender_id = other_user_id AND receiver_id = ?)
-         ORDER BY sent_at DESC LIMIT 1) as last_message,
-        (SELECT sent_at FROM messages 
-         WHERE (sender_id = ? AND receiver_id = other_user_id) 
-            OR (sender_id = other_user_id AND receiver_id = ?)
-         ORDER BY sent_at DESC LIMIT 1) as last_message_time
-      FROM messages m
-      JOIN users u ON u.user_id = CASE 
-        WHEN m.sender_id = ? THEN m.receiver_id
-        ELSE m.sender_id
-      END
-      WHERE m.sender_id = ? OR m.receiver_id = ?
-      ORDER BY last_message_time DESC
-    `, [req.user.user_id, req.user.user_id, req.user.user_id, req.user.user_id, req.user.user_id, req.user.user_id, req.user.user_id, req.user.user_id]);
+    const userId = req.user.user_id;
+
+    // Get all messages involving the user
+    const allMessages = await prisma.messages.findMany({
+      where: {
+        OR: [
+          { sender_id: userId },
+          { receiver_id: userId }
+        ]
+      },
+      include: {
+        users_messages_sender_idTousers: { select: { user_id: true, username: true } },
+        users_messages_receiver_idTousers: { select: { user_id: true, username: true } }
+      },
+      orderBy: { sent_at: 'desc' }
+    });
+
+    // Group by other user to get unique conversations
+    const conversationMap = new Map();
+    for (const msg of allMessages) {
+      const otherUserId = msg.sender_id === userId ? msg.receiver_id : msg.sender_id;
+      if (!conversationMap.has(otherUserId)) {
+        const otherUser = msg.sender_id === userId
+          ? msg.users_messages_receiver_idTousers
+          : msg.users_messages_sender_idTousers;
+        conversationMap.set(otherUserId, {
+          other_user_id: otherUserId,
+          other_user_name: otherUser.username,
+          last_message: msg.content,
+          last_message_time: msg.sent_at
+        });
+      }
+    }
+
+    const conversations = Array.from(conversationMap.values());
     res.json({ conversations });
   } catch (error) {
     console.error(error);

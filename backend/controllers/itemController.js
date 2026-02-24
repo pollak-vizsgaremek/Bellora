@@ -1,18 +1,32 @@
-import { getDB } from '../config/db.js';
+import prisma from '../config/db.js';
 
 export const getAllItems = async (req, res) => {
   try {
-    const db = getDB();
-    const [items] = await db.execute(`
-      SELECT i.*, u.username as seller_name, 
-             (SELECT image_url FROM itemimages WHERE item_id = i.item_id AND is_primary = 1 LIMIT 1) as image_url,
-             (SELECT COUNT(*) FROM favorites WHERE item_id = i.item_id) as favorites_count
-      FROM items i
-      JOIN users u ON i.user_id = u.user_id
-      WHERE i.status = 'available'
-      ORDER BY i.created_at DESC
-    `);
-    res.json({ items });
+    const items = await prisma.items.findMany({
+      where: { status: 'available' },
+      include: {
+        users: { select: { username: true } },
+        itemimages: {
+          where: { is_primary: true },
+          take: 1,
+          select: { image_url: true }
+        },
+        _count: { select: { favorites: true } }
+      },
+      orderBy: { created_at: 'desc' }
+    });
+
+    const result = items.map(item => ({
+      ...item,
+      seller_name: item.users.username,
+      image_url: item.itemimages[0]?.image_url || null,
+      favorites_count: item._count.favorites,
+      users: undefined,
+      itemimages: undefined,
+      _count: undefined
+    }));
+
+    res.json({ items: result });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Szerver hiba' });
@@ -21,18 +35,31 @@ export const getAllItems = async (req, res) => {
 
 export const getItemById = async (req, res) => {
   try {
-    const db = getDB();
-    const [items] = await db.execute(`
-      SELECT i.*, u.username as seller_name, u.user_id as seller_id,
-             (SELECT COUNT(*) FROM favorites WHERE item_id = i.item_id) as favorites_count
-      FROM items i
-      JOIN users u ON i.user_id = u.user_id
-      WHERE i.item_id = ?
-    `, [req.params.id]);
-    
-    const [images] = await db.execute('SELECT * FROM itemimages WHERE item_id = ? ORDER BY display_order', [req.params.id]);
-    
-    res.json({ item: { ...items[0], images } });
+    const item = await prisma.items.findUnique({
+      where: { item_id: parseInt(req.params.id) },
+      include: {
+        users: { select: { username: true, user_id: true } },
+        itemimages: { orderBy: { display_order: 'asc' } },
+        _count: { select: { favorites: true } }
+      }
+    });
+
+    if (!item) {
+      return res.status(404).json({ message: 'Hirdetés nem található' });
+    }
+
+    const result = {
+      ...item,
+      seller_name: item.users.username,
+      seller_id: item.users.user_id,
+      favorites_count: item._count.favorites,
+      images: item.itemimages,
+      users: undefined,
+      itemimages: undefined,
+      _count: undefined
+    };
+
+    res.json({ item: result });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Szerver hiba' });
@@ -41,18 +68,22 @@ export const getItemById = async (req, res) => {
 
 export const createItem = async (req, res) => {
   try {
-    const db = getDB();
     const { title, description, price, category_id } = req.body;
     
     if (!price || parseFloat(price) <= 0) {
       return res.status(400).json({ message: 'Az árnak nullánál nagyobbnak kell lennie' });
     }
     
-    const [result] = await db.execute(
-      'INSERT INTO items (user_id, category_id, title, description, price) VALUES (?, ?, ?, ?, ?)',
-      [req.user.user_id, category_id || 1, title, description, price]
-    );
-    res.json({ message: 'Hirdetés létrehozva', item_id: result.insertId });
+    const item = await prisma.items.create({
+      data: {
+        user_id: req.user.user_id,
+        category_id: category_id ? parseInt(category_id) : 1,
+        title,
+        description,
+        price: parseFloat(price)
+      }
+    });
+    res.json({ message: 'Hirdetés létrehozva', item_id: item.item_id });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Szerver hiba' });
@@ -61,28 +92,36 @@ export const createItem = async (req, res) => {
 
 export const updateItem = async (req, res) => {
   try {
-    const db = getDB();
     const { title, description, price, category_id, status } = req.body;
-    const { id } = req.params;
+    const id = parseInt(req.params.id);
     
     if (!price || parseFloat(price) <= 0) {
       return res.status(400).json({ message: 'Az árnak nullánál nagyobbnak kell lennie' });
     }
     
-    const [items] = await db.execute('SELECT user_id FROM items WHERE item_id = ?', [id]);
+    const item = await prisma.items.findUnique({
+      where: { item_id: id },
+      select: { user_id: true }
+    });
     
-    if (items.length === 0) {
+    if (!item) {
       return res.status(404).json({ message: 'Hirdetés nem található' });
     }
     
-    if (items[0].user_id !== req.user.user_id) {
+    if (item.user_id !== req.user.user_id) {
       return res.status(403).json({ message: 'Nincs jogosultságod szerkeszteni ezt a hirdetést' });
     }
     
-    await db.execute(
-      'UPDATE items SET title = ?, description = ?, price = ?, category_id = ?, status = ? WHERE item_id = ?',
-      [title, description, price, category_id, status, id]
-    );
+    await prisma.items.update({
+      where: { item_id: id },
+      data: {
+        title,
+        description,
+        price: parseFloat(price),
+        category_id: parseInt(category_id),
+        status
+      }
+    });
     
     res.json({ message: 'Hirdetés frissítve' });
   } catch (error) {
@@ -93,22 +132,23 @@ export const updateItem = async (req, res) => {
 
 export const deleteItem = async (req, res) => {
   try {
-    const db = getDB();
-    const { id } = req.params;
+    const id = parseInt(req.params.id);
     
-    const [items] = await db.execute('SELECT user_id FROM items WHERE item_id = ?', [id]);
+    const item = await prisma.items.findUnique({
+      where: { item_id: id },
+      select: { user_id: true }
+    });
     
-    if (items.length === 0) {
+    if (!item) {
       return res.status(404).json({ message: 'Hirdetés nem található' });
     }
     
-    if (items[0].user_id !== req.user.user_id) {
+    if (item.user_id !== req.user.user_id) {
       return res.status(403).json({ message: 'Nincs jogosultságod törölni ezt a hirdetést' });
     }
     
-    await db.execute('DELETE FROM itemimages WHERE item_id = ?', [id]);
-    await db.execute('DELETE FROM favorites WHERE item_id = ?', [id]);
-    await db.execute('DELETE FROM items WHERE item_id = ?', [id]);
+    // Prisma cascades handle itemimages and favorites deletion
+    await prisma.items.delete({ where: { item_id: id } });
     
     res.json({ message: 'Hirdetés törölve' });
   } catch (error) {
@@ -119,16 +159,28 @@ export const deleteItem = async (req, res) => {
 
 export const getMyItems = async (req, res) => {
   try {
-    const db = getDB();
-    const [items] = await db.execute(`
-      SELECT i.*, 
-             (SELECT image_url FROM itemimages WHERE item_id = i.item_id ORDER BY display_order ASC LIMIT 1) as image_url,
-             (SELECT COUNT(*) FROM favorites WHERE item_id = i.item_id) as favorites_count
-      FROM items i
-      WHERE i.user_id = ?
-      ORDER BY i.created_at DESC
-    `, [req.user.user_id]);
-    res.json({ items });
+    const items = await prisma.items.findMany({
+      where: { user_id: req.user.user_id },
+      include: {
+        itemimages: {
+          orderBy: { display_order: 'asc' },
+          take: 1,
+          select: { image_url: true }
+        },
+        _count: { select: { favorites: true } }
+      },
+      orderBy: { created_at: 'desc' }
+    });
+
+    const result = items.map(item => ({
+      ...item,
+      image_url: item.itemimages[0]?.image_url || null,
+      favorites_count: item._count.favorites,
+      itemimages: undefined,
+      _count: undefined
+    }));
+
+    res.json({ items: result });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Szerver hiba' });
@@ -137,11 +189,10 @@ export const getMyItems = async (req, res) => {
 
 export const getItemImages = async (req, res) => {
   try {
-    const db = getDB();
-    const [images] = await db.execute(
-      'SELECT * FROM itemimages WHERE item_id = ? ORDER BY is_primary DESC, display_order',
-      [req.params.id]
-    );
+    const images = await prisma.itemimages.findMany({
+      where: { item_id: parseInt(req.params.id) },
+      orderBy: [{ is_primary: 'desc' }, { display_order: 'asc' }]
+    });
     res.json({ images });
   } catch (error) {
     console.error(error);
@@ -151,20 +202,26 @@ export const getItemImages = async (req, res) => {
 
 export const uploadItemImages = async (req, res) => {
   try {
-    const db = getDB();
-    const [items] = await db.execute('SELECT user_id FROM items WHERE item_id = ?', [req.params.id]);
-    if (items.length === 0 || items[0].user_id !== req.user.user_id) {
+    const itemId = parseInt(req.params.id);
+    const item = await prisma.items.findUnique({
+      where: { item_id: itemId },
+      select: { user_id: true }
+    });
+    if (!item || item.user_id !== req.user.user_id) {
       return res.status(403).json({ message: 'Nincs jogosultságod' });
     }
 
     const uploadedImages = [];
     for (const file of req.files) {
       const image_url = '/uploads/' + file.filename;
-      const [result] = await db.execute(
-        'INSERT INTO itemimages (item_id, image_url, is_primary) VALUES (?, ?, ?)',
-        [req.params.id, image_url, 0]
-      );
-      uploadedImages.push({ image_id: result.insertId, image_url });
+      const image = await prisma.itemimages.create({
+        data: {
+          item_id: itemId,
+          image_url,
+          is_primary: false
+        }
+      });
+      uploadedImages.push({ image_id: image.image_id, image_url });
     }
     
     res.json({ message: 'Képek feltöltve', images: uploadedImages });
@@ -176,15 +233,21 @@ export const uploadItemImages = async (req, res) => {
 
 export const deleteItemImage = async (req, res) => {
   try {
-    const db = getDB();
-    const [items] = await db.execute('SELECT user_id FROM items WHERE item_id = ?', [req.params.id]);
-    if (items.length === 0 || items[0].user_id !== req.user.user_id) {
+    const itemId = parseInt(req.params.id);
+    const item = await prisma.items.findUnique({
+      where: { item_id: itemId },
+      select: { user_id: true }
+    });
+    if (!item || item.user_id !== req.user.user_id) {
       return res.status(403).json({ message: 'Nincs jogosultságod' });
     }
 
-    await db.execute('DELETE FROM itemimages WHERE image_id = ? AND item_id = ?', 
-      [req.params.imageId, req.params.id]
-    );
+    await prisma.itemimages.deleteMany({
+      where: {
+        image_id: parseInt(req.params.imageId),
+        item_id: itemId
+      }
+    });
     
     res.json({ message: 'Kép törölve' });
   } catch (error) {
@@ -195,16 +258,29 @@ export const deleteItemImage = async (req, res) => {
 
 export const setPrimaryImage = async (req, res) => {
   try {
-    const db = getDB();
-    const [items] = await db.execute('SELECT user_id FROM items WHERE item_id = ?', [req.params.id]);
-    if (items.length === 0 || items[0].user_id !== req.user.user_id) {
+    const itemId = parseInt(req.params.id);
+    const item = await prisma.items.findUnique({
+      where: { item_id: itemId },
+      select: { user_id: true }
+    });
+    if (!item || item.user_id !== req.user.user_id) {
       return res.status(403).json({ message: 'Nincs jogosultságod' });
     }
 
-    await db.execute('UPDATE itemimages SET is_primary = 0 WHERE item_id = ?', [req.params.id]);
-    await db.execute('UPDATE itemimages SET is_primary = 1 WHERE image_id = ? AND item_id = ?', 
-      [req.params.imageId, req.params.id]
-    );
+    // Reset all images for this item, then set the selected one as primary
+    await prisma.$transaction([
+      prisma.itemimages.updateMany({
+        where: { item_id: itemId },
+        data: { is_primary: false }
+      }),
+      prisma.itemimages.updateMany({
+        where: {
+          image_id: parseInt(req.params.imageId),
+          item_id: itemId
+        },
+        data: { is_primary: true }
+      })
+    ]);
     
     res.json({ message: 'Elsődleges kép beállítva' });
   } catch (error) {
@@ -215,20 +291,25 @@ export const setPrimaryImage = async (req, res) => {
 
 export const reorderImages = async (req, res) => {
   try {
-    const db = getDB();
-    const [items] = await db.execute('SELECT user_id FROM items WHERE item_id = ?', [req.params.id]);
-    if (items.length === 0 || items[0].user_id !== req.user.user_id) {
+    const itemId = parseInt(req.params.id);
+    const item = await prisma.items.findUnique({
+      where: { item_id: itemId },
+      select: { user_id: true }
+    });
+    if (!item || item.user_id !== req.user.user_id) {
       return res.status(403).json({ message: 'Nincs jogosultságod' });
     }
 
     const { images } = req.body;
     
-    for (const img of images) {
-      await db.execute(
-        'UPDATE itemimages SET display_order = ? WHERE image_id = ? AND item_id = ?',
-        [img.display_order, img.image_id, req.params.id]
-      );
-    }
+    await prisma.$transaction(
+      images.map(img =>
+        prisma.itemimages.updateMany({
+          where: { image_id: img.image_id, item_id: itemId },
+          data: { display_order: img.display_order }
+        })
+      )
+    );
     
     res.json({ message: 'Sorrend frissítve' });
   } catch (error) {

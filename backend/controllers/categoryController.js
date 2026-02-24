@@ -1,9 +1,10 @@
-import { getDB } from '../config/db.js';
+import prisma from '../config/db.js';
 
 export const getAllCategories = async (req, res) => {
     try {
-        const db = getDB();
-        const [categories] = await db.execute('SELECT * FROM categories WHERE parent_id IS NULL');
+        const categories = await prisma.categories.findMany({
+            where: { parent_id: null }
+        });
         res.json({ categories });
     } catch (error) {
         console.error(error);
