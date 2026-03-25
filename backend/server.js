@@ -36,7 +36,7 @@ const io = new Server(httpServer, {
 // Test Prisma connection
 try {
   await prisma.$connect();
-  console.log('Adatbázis kapcsolódva (Prisma)');
+  console.log('Adatbázis kapcsolódva');
 } catch (error) {
   console.error('Adatbázis kapcsolódási hiba:', error);
   process.exit(1);
