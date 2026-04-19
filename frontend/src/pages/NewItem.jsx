@@ -14,20 +14,33 @@ export default function NewItem() {
     const [description, setDescription] = useState('');
     const [price, setPrice] = useState('');
     const [categoryId, setCategoryId] = useState('1');
-    const [image, setImage] = useState(null);
-    const [imagePreview, setImagePreview] = useState(null);
+    const [images, setImages] = useState([]);
+    const [imagePreviews, setImagePreviews] = useState([]);
     const [loading, setLoading] = useState(false);
 
     const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setImage(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result);
-            };
-            reader.readAsDataURL(file);
+        const files = Array.from(e.target.files);
+        if (files.length > 0) {
+            const newImages = [...images, ...files].slice(0, 10); // Max 10 images
+            setImages(newImages);
+            
+            const newPreviews = [];
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    newPreviews.push(reader.result);
+                    if (newPreviews.length === files.length) {
+                        setImagePreviews([...imagePreviews, ...newPreviews]);
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
         }
+    };
+
+    const removeImage = (index) => {
+        setImages(images.filter((_, i) => i !== index));
+        setImagePreviews(imagePreviews.filter((_, i) => i !== index));
     };
 
     const handleSubmit = async (e) => {
@@ -48,9 +61,11 @@ export default function NewItem() {
                 category_id: categoryId
             });
 
-            if (image) {
+            if (images.length > 0) {
                 const formData = new FormData();
-                formData.append('images', image);
+                images.forEach((image, index) => {
+                    formData.append('images', image);
+                });
 
                 await api.post(`/items/${response.data.item_id}/images`, formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
@@ -75,37 +90,51 @@ export default function NewItem() {
 
                 <form onSubmit={handleSubmit} className="bg-gray-800 p-4 md:p-8 rounded-lg shadow-xl border border-gray-700">
                     <div className="mb-4 md:mb-6">
-                        <label className="block text-gray-300 font-semibold mb-2 md:mb-3 text-base md:text-lg">Címkép feltöltése</label>
+                        <label className="block text-gray-300 font-semibold mb-2 md:mb-3 text-base md:text-lg">Képek feltöltése (max. 10 kép)</label>
                         <div className="border-2 border-dashed border-gray-600 rounded-lg p-4 md:p-6 text-center hover:border-blue-500 transition">
-                            {imagePreview ? (
-                                <div className="relative">
-                                    <img src={imagePreview} alt="Előnézet" className="max-h-64 mx-auto rounded" />
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setImage(null);
-                                            setImagePreview(null);
-                                        }}
-                                        className="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-                                    >
-                                        Kép eltávolítása
-                                    </button>
+                            {imagePreviews.length > 0 ? (
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                        {imagePreviews.map((preview, index) => (
+                                            <div key={index} className="relative">
+                                                <img src={preview} alt={`Előnézet ${index + 1}`} className="w-full h-32 object-cover rounded" />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeImage(index)}
+                                                    className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-700 text-sm"
+                                                >
+                                                    ×
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {images.length < 10 && (
+                                        <label className="cursor-pointer inline-block">
+                                            <span className="text-blue-400 hover:text-blue-300 text-sm">+ További kép hozzáadása</span>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                multiple
+                                                onChange={handleImageChange}
+                                                className="hidden"
+                                            />
+                                        </label>
+                                    )}
                                 </div>
                             ) : (
                                 <div>
-                                    <svg className="mx-auto h-12 w-12 text-gray-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
+                                    <UploadCloud className="mx-auto h-12 w-12 text-gray-500 mb-3" />
                                     <label className="cursor-pointer">
-                                        <span className="text-blue-400 hover:text-blue-300">Kattints ide a kép feltöltéséhez</span>
+                                        <span className="text-blue-400 hover:text-blue-300">Kattints ide a képek feltöltéséhez</span>
                                         <input
                                             type="file"
                                             accept="image/*"
+                                            multiple
                                             onChange={handleImageChange}
                                             className="hidden"
                                         />
                                     </label>
-                                    <p className="text-gray-500 text-sm mt-2">PNG, JPG, GIF maximum 5MB</p>
+                                    <p className="text-gray-500 text-sm mt-2">Több kép is feltölthető, PNG, JPG, GIF maximum 5MB</p>
                                 </div>
                             )}
                         </div>

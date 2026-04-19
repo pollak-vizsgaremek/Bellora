@@ -125,6 +125,20 @@ export default function Profile() {
     setLoading(true);
     setMessage('');
 
+    // Phone number validation for Hungarian numbers
+    if (phone && !/^(\+36|06)[0-9]{9}$/.test(phone.replace(/\s/g, ''))) {
+      setMessage('Hibás telefonszám formátum! Használj +36 vagy 06 előtagot, majd 9 számjegyet.');
+      setLoading(false);
+      return;
+    }
+
+    // Postal code validation - only numbers
+    if (postalCode && !/^[0-9]{4}$/.test(postalCode)) {
+      setMessage('Az irányítószám csak 4 számjegy lehet!');
+      setLoading(false);
+      return;
+    }
+
     try {
       await api.put('/users/profile', {
         full_name: fullName,

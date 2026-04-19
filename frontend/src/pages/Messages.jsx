@@ -215,7 +215,7 @@ export default function Messages() {
                         className={`flex ${msg.sender_id == user.user_id ? 'justify-end' : 'justify-start'} animate-fade-in`}
                       >
                         <div
-                          className={`max-w-[85%] md:max-w-md ${msg.offer_id && msg.item_id ? '' : `px-3 py-2 md:px-5 md:py-3 rounded-2xl shadow-lg ${msg.sender_id == user.user_id
+                          className={`max-w-[95%] md:max-w-lg ${msg.offer_id && msg.item_id ? '' : `px-3 py-2 md:px-5 md:py-3 rounded-2xl shadow-lg ${msg.sender_id == user.user_id
                             ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-br-sm'
                             : 'bg-gray-700/80 backdrop-blur-sm text-white border border-white/10 rounded-bl-sm'
                             }`

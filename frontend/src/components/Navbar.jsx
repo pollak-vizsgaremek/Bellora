@@ -131,7 +131,7 @@ export default function Navbar() {
                   >
                     <Bell size={22} />
                     {notificationCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                      <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                         {notificationCount > 9 ? '9+' : notificationCount}
                       </span>
                     )}
@@ -301,7 +301,7 @@ export default function Navbar() {
                 <button onClick={() => { navigate('/messages'); setShowMobileMenu(false); }} className="text-left text-gray-300 hover:text-white transition py-2 flex items-center gap-2 relative">
                   <MessageCircle size={18} /> Üzenetek
                   {unreadOffers > 0 && (
-                    <span className="bg-red-500 text-white text-xs font-bold rounded-full px-2 py-0.5 ml-2">
+                    <span className="bg-green-500 text-white text-xs font-bold rounded-full px-2 py-0.5 ml-2">
                       {unreadOffers}
                     </span>
                   )}
