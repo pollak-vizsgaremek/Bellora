@@ -89,6 +89,11 @@ export const getIO = () => io;
 export const getConnectedUsers = () => connectedUsers;
 
 const PORT = process.env.PORT || 5000;
-httpServer.listen(PORT, () => {
-  console.log(`Szerver fut a ${PORT} porton`);
-});
+
+if (process.env.NODE_ENV !== 'test') {
+  httpServer.listen(PORT, () => {
+    console.log(`Szerver fut a ${PORT} porton`);
+  });
+}
+
+export { app, httpServer };
