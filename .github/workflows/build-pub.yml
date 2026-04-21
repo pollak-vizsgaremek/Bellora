@@ -56,6 +56,10 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha,scope=backend
           cache-to: type=gha,mode=max,scope=backend
+          build-args: |
+            PORT=${{ vars.PORT || '5000' }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
 
   build-frontend:
     name: Build Frontend 🔐
