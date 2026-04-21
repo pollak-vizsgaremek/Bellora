@@ -23,7 +23,7 @@ ENV PORT=$PORT
 ENV JWT_SECRET=$JWT_SECRET
 
 # Prisma kliens generálása a schema-ból (ehhez még nem kell futó adatbázis)
-RUN npx prisma generate
+RUN npx prisma@6 generate
 
 EXPOSE 5000
 
