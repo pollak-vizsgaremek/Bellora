@@ -4,7 +4,6 @@ export const getNotifications = async (req, res) => {
   try {
     const userId = req.user.user_id;
 
-    // Get recent favorites on user's items
     const favoritesRaw = await prisma.favorites.findMany({
       where: {
         items: { user_id: userId }
@@ -27,7 +26,6 @@ export const getNotifications = async (req, res) => {
       type: 'favorite'
     }));
 
-    // Get recent orders for user's items
     const ordersRaw = await prisma.orders.findMany({
       where: { seller_id: userId },
       include: {
@@ -50,7 +48,6 @@ export const getNotifications = async (req, res) => {
       type: 'order'
     }));
 
-    // Get recent pending offers on user's items
     const offersRaw = await prisma.offers.findMany({
       where: { seller_id: userId, status: 'pending' },
       include: {
@@ -74,7 +71,6 @@ export const getNotifications = async (req, res) => {
       type: 'offer'
     }));
 
-    // Combine and sort all notifications
     const allNotifications = [...favorites, ...orders, ...offers].sort((a, b) => {
       return new Date(b.created_at) - new Date(a.created_at);
     });

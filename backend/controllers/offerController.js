@@ -8,7 +8,6 @@ export const createOffer = async (req, res) => {
     const item_id = parseInt(req.body.item_id);
     const { offer_price } = req.body;
     
-    // Check if user already has a pending offer for this item
     const existingOffer = await prisma.offers.findFirst({
       where: { item_id, buyer_id: req.user.user_id, status: 'pending' }
     });

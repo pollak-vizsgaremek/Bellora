@@ -1,4 +1,4 @@
-import prisma from '../config/db.js';
+import prisma from '../config/db.js';   
 
 export const getMessages = async (req, res) => {
   try {
@@ -21,7 +21,9 @@ export const getMessages = async (req, res) => {
             offer_price: true,
             counter_price: true,
             items: {
-              select: { item_id: true, title: true, price: true, itemimages: { orderBy: [{ is_primary: 'desc' }, { display_order: 'asc' }], take: 1, select: { image_url: true } } }
+              select: { item_id: true, title: true, price: true, itemimages: 
+                { orderBy: [{ is_primary: 'desc' }, { display_order: 'asc' }], 
+                take: 1, select: { image_url: true } } }
             }
           }
         }
