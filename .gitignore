@@ -4,3 +4,7 @@ frontend/.env
 backend/.env
 /node_modules
 /backend/uploads
+docs/admin_migration.sql
+docs/fejlesztendo_funkciok.txt
+/frontend/playwright-report
+/frontend/test-results

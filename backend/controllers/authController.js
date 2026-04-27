@@ -20,12 +20,12 @@ export const register = async (req, res) => {
       data: { username, email, password_hash }
     });
     
-    const token = jwt.sign({ user_id: user.user_id, username, email }, process.env.JWT_SECRET);
+    const token = jwt.sign({ user_id: user.user_id, username, email, role: user.role }, process.env.JWT_SECRET);
     
     res.json({ 
       message: 'Sikeres regisztráció',
       token,
-      user: { user_id: user.user_id, username, email }
+      user: { user_id: user.user_id, username, email, role: user.role }
     });
   } catch (error) {
     console.error(error);
@@ -47,12 +47,12 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: 'Hibás email vagy jelszó' });
     }
     
-    const token = jwt.sign({ user_id: user.user_id, username: user.username, email: user.email }, process.env.JWT_SECRET);
+    const token = jwt.sign({ user_id: user.user_id, username: user.username, email: user.email, role: user.role }, process.env.JWT_SECRET);
     
     res.json({
       message: 'Sikeres bejelentkezés',
       token,
-      user: { user_id: user.user_id, username: user.username, email: user.email, profile_image: user.profile_image }
+      user: { user_id: user.user_id, username: user.username, email: user.email, profile_image: user.profile_image, role: user.role }
     });
   } catch (error) {
     console.error(error);
@@ -74,7 +74,8 @@ export const getCurrentUser = async (req, res) => {
         city: true,
         postal_code: true,
         profile_image: true,
-        join_date: true
+        join_date: true,
+        role: true
       }
     });
     res.json({ user });

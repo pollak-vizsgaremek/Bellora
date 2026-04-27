@@ -23,6 +23,7 @@ export default function MyItems() {
   const { success, error: alertError } = useAlert();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, text: '', action: null });
   const [stats, setStats] = useState({
     total: 0,
     available: 0,
@@ -58,18 +59,22 @@ export default function MyItems() {
     }
   };
 
-  const handleDelete = async (itemId, e) => {
+  const handleDelete = (itemId, e) => {
     e.stopPropagation();
-    if (!window.confirm("Biztosan törlöd ezt a hirdetést?")) return;
-
-    try {
-      await api.delete(`/items/${itemId}`);
-      setItems(items.filter((item) => item.item_id !== itemId));
-      success("Hirdetés sikeresen törölve");
-    } catch (error) {
-      console.error(error);
-      alertError("Hiba történt a törlés során");
-    }
+    setConfirmModal({
+      isOpen: true,
+      text: 'Biztosan törlöd ezt a hirdetést?',
+      action: async () => {
+        try {
+          await api.delete(`/items/${itemId}`);
+          setItems(items.filter((item) => item.item_id !== itemId));
+          success("Hirdetés sikeresen törölve");
+        } catch (error) {
+          console.error(error);
+          alertError("Hiba történt a törlés során");
+        }
+      }
+    });
   };
 
   return (
@@ -232,6 +237,32 @@ export default function MyItems() {
           </div>
         )}
       </div>
+
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-2xl p-6 max-w-md w-full shadow-2xl border border-gray-700">
+            <h3 className="text-xl font-bold text-white mb-2">Megerősítés szükséges</h3>
+            <p className="text-gray-300 mb-6">{confirmModal.text}</p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setConfirmModal({ isOpen: false, text: '', action: null })}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition"
+              >
+                Mégse
+              </button>
+              <button
+                onClick={() => {
+                  if (confirmModal.action) confirmModal.action();
+                  setConfirmModal({ isOpen: false, text: '', action: null });
+                }}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition"
+              >
+                Törlés
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

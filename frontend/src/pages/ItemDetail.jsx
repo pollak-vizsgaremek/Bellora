@@ -6,7 +6,7 @@ import api from '../services/api';
 import Navbar from '../components/Navbar';
 import {
   Heart, MessageCircle, Share2, MapPin, Clock, Tag,
-  TrendingDown, Check, X, ArrowRight, AlertCircle, ChevronLeft, ChevronRight, ShoppingCart
+  TrendingDown, Check, X, ArrowRight, AlertCircle, ChevronLeft, ChevronRight, ShoppingCart, Flag
 } from 'lucide-react';
 
 export default function ItemDetail() {
@@ -24,6 +24,9 @@ export default function ItemDetail() {
   const [selectedOffer, setSelectedOffer] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, text: '', action: null, confirmText: 'Igen' });
 
   useEffect(() => {
     loadItem();
@@ -86,28 +89,38 @@ export default function ItemDetail() {
     }
   };
 
-  const handleAcceptOffer = async (offerId) => {
-    if (!window.confirm('Biztosan elfogadod ezt az ajánlatot?')) return;
-
-    try {
-      await api.put(`/offers/${offerId}/accept`);
-      success('Árajánlat elfogadva!');
-      loadOffers();
-    } catch (err) {
-      alertError('Hiba történt');
-    }
+  const handleAcceptOffer = (offerId) => {
+    setConfirmModal({
+      isOpen: true,
+      text: 'Biztosan elfogadod ezt az ajánlatot?',
+      confirmText: 'Elfogadás',
+      action: async () => {
+        try {
+          await api.put(`/offers/${offerId}/accept`);
+          success('Árajánlat elfogadva!');
+          loadOffers();
+        } catch (err) {
+          alertError('Hiba történt');
+        }
+      }
+    });
   };
 
-  const handleRejectOffer = async (offerId) => {
-    if (!window.confirm('Biztosan elutasítod ezt az ajánlatot?')) return;
-
-    try {
-      await api.put(`/offers/${offerId}/reject`);
-      info('Árajánlat elutasítva');
-      loadOffers();
-    } catch (err) {
-      alertError('Hiba történt');
-    }
+  const handleRejectOffer = (offerId) => {
+    setConfirmModal({
+      isOpen: true,
+      text: 'Biztosan elutasítod ezt az ajánlatot?',
+      confirmText: 'Elutasítás',
+      action: async () => {
+        try {
+          await api.put(`/offers/${offerId}/reject`);
+          info('Árajánlat elutasítva');
+          loadOffers();
+        } catch (err) {
+          alertError('Hiba történt');
+        }
+      }
+    });
   };
 
   const handleSendCounter = async () => {
@@ -130,28 +143,38 @@ export default function ItemDetail() {
     }
   };
 
-  const handleAcceptCounter = async (offerId) => {
-    if (!window.confirm('Biztosan elfogadod a visszaájnlatot?')) return;
-
-    try {
-      await api.put(`/offers/${offerId}/accept-counter`);
-      success('Visszaájnlat elfogadva!');
-      loadOffers();
-    } catch (err) {
-      alertError('Hiba történt');
-    }
+  const handleAcceptCounter = (offerId) => {
+    setConfirmModal({
+      isOpen: true,
+      text: 'Biztosan elfogadod a visszaajánlatot?',
+      confirmText: 'Elfogadás',
+      action: async () => {
+        try {
+          await api.put(`/offers/${offerId}/accept-counter`);
+          success('Visszaajánlat elfogadva!');
+          loadOffers();
+        } catch (err) {
+          alertError('Hiba történt');
+        }
+      }
+    });
   };
 
-  const handleCancelOffer = async (offerId) => {
-    if (!window.confirm('Biztosan visszavonod az árajánlat?')) return;
-
-    try {
-      await api.delete(`/offers/${offerId}`);
-      info('Árajánlat törölve!');
-      loadOffers();
-    } catch (err) {
-      alertError('Hiba történt');
-    }
+  const handleCancelOffer = (offerId) => {
+    setConfirmModal({
+      isOpen: true,
+      text: 'Biztosan visszavonod az árajánlatot?',
+      confirmText: 'Visszavonás',
+      action: async () => {
+        try {
+          await api.delete(`/offers/${offerId}`);
+          info('Árajánlat törölve!');
+          loadOffers();
+        } catch (err) {
+          alertError('Hiba történt');
+        }
+      }
+    });
   };
 
   const addToFavorites = async () => {
@@ -187,6 +210,21 @@ export default function ItemDetail() {
     } catch (err) {
       alertError(err.response?.data?.message || 'Hiba történt a vásárlás során');
       setShowBuyModal(false);
+    }
+  };
+
+  const handleReport = async () => {
+    if (!reportReason.trim()) {
+      alertError('Kérlek add meg a bejelentés okát!');
+      return;
+    }
+    try {
+      await api.post('/reports', { item_id: id, reason: reportReason });
+      success('Bejelentés elküldve!');
+      setShowReportModal(false);
+      setReportReason('');
+    } catch (err) {
+      alertError(err.response?.data?.message || 'Hiba történt');
     }
   };
 
@@ -516,6 +554,13 @@ export default function ItemDetail() {
                       {item.favorites_count || 0}
                     </span>
                   </button>
+
+                  <button
+                    onClick={() => setShowReportModal(true)}
+                    className="w-full bg-gray-700 hover:bg-red-600/20 text-gray-400 hover:text-red-400 py-3 md:py-4 rounded-xl font-semibold transition shadow-lg flex items-center justify-center gap-2 text-sm md:text-base border border-gray-600 hover:border-red-600/50"
+                  >
+                    <Flag className="w-4 h-4 md:w-5 md:h-5" /> Termék bejelentése
+                  </button>
                 </div>
               )}
 
@@ -675,6 +720,73 @@ export default function ItemDetail() {
                 className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 rounded-xl font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Küldés
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showReportModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-gray-700">
+            <div className="text-center mb-6">
+              <div className="bg-red-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Flag className="w-8 h-8 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-2">Termék bejelentése</h2>
+              <p className="text-gray-400">Írd le, miért szeretnéd bejelenteni ezt a terméket</p>
+            </div>
+
+            <div className="mb-6">
+              <textarea
+                value={reportReason}
+                onChange={(e) => setReportReason(e.target.value)}
+                placeholder="Pl. Hamis termék, nem megfelelő tartalom..."
+                rows={4}
+                className="w-full px-4 py-3 bg-gray-700 text-white border border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setShowReportModal(false); setReportReason(''); }}
+                className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-xl font-semibold transition"
+              >
+                Mégse
+              </button>
+              <button
+                onClick={handleReport}
+                disabled={!reportReason.trim()}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Bejelentés
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className="bg-gray-800 rounded-2xl p-6 max-w-md w-full shadow-2xl border border-gray-700">
+            <h3 className="text-xl font-bold text-white mb-2">Megerősítés szükséges</h3>
+            <p className="text-gray-300 mb-6">{confirmModal.text}</p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setConfirmModal({ isOpen: false, text: '', action: null, confirmText: 'Igen' })}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition"
+              >
+                Mégse
+              </button>
+              <button
+                onClick={() => {
+                  if (confirmModal.action) confirmModal.action();
+                  setConfirmModal({ isOpen: false, text: '', action: null, confirmText: 'Igen' });
+                }}
+                className={`px-4 py-2 text-white rounded-lg font-medium transition ${confirmModal.confirmText.includes('utasít') || confirmModal.confirmText.includes('von') ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+              >
+                {confirmModal.confirmText}
               </button>
             </div>
           </div>

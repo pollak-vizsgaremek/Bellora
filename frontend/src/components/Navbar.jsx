@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router';
 import { useAuth } from '../hooks/useAuth';
 import { useState, useEffect, useRef } from 'react';
-import { Home, Package, MessageCircle, Heart, Plus, User, LogOut, ChevronDown, Menu, X, Bell, ShoppingBag, Star } from 'lucide-react';
+import { Home, Package, MessageCircle, Heart, Plus, User, LogOut, ChevronDown, Menu, X, Bell, ShoppingBag, Star, Shield } from 'lucide-react';
 import api from '../services/api';
 
 export default function Navbar() {
@@ -251,6 +251,14 @@ export default function Navbar() {
                       >
                         <Package size={16} /> Hirdetéseim
                       </button>
+                      {user.role === 'admin' && (
+                        <button
+                          onClick={() => { navigate('/admin'); setShowUserMenu(false); }}
+                          className="w-full text-left px-4 py-2 text-purple-400 hover:bg-gray-700 hover:text-purple-300 transition flex items-center gap-2"
+                        >
+                          <Shield size={16} /> Admin Panel
+                        </button>
+                      )}
                       <div className="border-t border-gray-700 my-2"></div>
                       <button
                         onClick={handleLogout}

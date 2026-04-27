@@ -13,6 +13,7 @@ import Messages from './pages/Messages';
 import Favorites from './pages/Favorites';
 import Profile from './pages/Profile';
 import PublicProfile from './pages/PublicProfile';
+import Admin from './pages/Admin';
 
 function App() {
   return (
@@ -61,6 +62,11 @@ function App() {
                 </ProtectedRoute>
               } />
               <Route path="/user/:userId" element={<PublicProfile />} />
+              <Route path="/admin" element={
+                <ProtectedRoute>
+                  <Admin />
+                </ProtectedRoute>
+              } />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </BrowserRouter>

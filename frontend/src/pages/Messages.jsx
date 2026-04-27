@@ -223,9 +223,9 @@ export default function Messages() {
                         >
 
                           {msg.offer_id && msg.item_id && !msg.content ? (
-                            <div className="bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-700">
+                            <div className="bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-700 min-w-[260px] md:min-w-[320px]">
                               <div className="p-3 md:p-4 border-b border-gray-700">
-                                <h4 className="font-semibold text-white text-sm md:text-base mb-2">{msg.item_title}</h4>
+                                <h4 className="font-semibold text-white text-base md:text-lg mb-2">{msg.item_title}</h4>
                                 <p className="text-gray-400 text-xs md:text-sm">
                                   Eredeti ár: <span className="font-bold text-gray-200">{msg.item_price?.toLocaleString()} Ft</span>
                                 </p>

@@ -15,6 +15,8 @@ import offerRoutes from './routes/offerRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import reportRoutes from './routes/reportRoutes.js';
 import { authenticateToken } from './middleware/auth.js';
 import { getMyItems } from './controllers/itemController.js';
 import { getConversations } from './controllers/messageController.js';
@@ -55,6 +57,8 @@ app.use('/api/offers', offerRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/reports', reportRoutes);
 
 app.get('/api/my-items', authenticateToken, getMyItems);
 app.get('/api/conversations', authenticateToken, getConversations);

@@ -7,7 +7,7 @@ export const getAllItems = async (req, res) => {
       include: {
         users: { select: { username: true } },
         itemimages: {
-          where: { is_primary: true },
+          orderBy: [{ is_primary: 'desc' }, { display_order: 'asc' }],
           take: 1,
           select: { image_url: true }
         },

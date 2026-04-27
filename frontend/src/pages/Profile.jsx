@@ -12,6 +12,7 @@ export default function Profile() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, text: '', action: null });
 
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -192,23 +193,30 @@ export default function Profile() {
     }
   };
 
-  const handleDeleteAccount = async () => {
-    if (!window.confirm('Biztosan törölni szeretnéd a fiókodat? Ez a művelet nem visszavonható!')) {
-      return;
-    }
-
-    if (!window.confirm('Utoljára kérdezzük: tényleg törölni szeretnéd az összes hirdetésedet és adatodat?')) {
-      return;
-    }
-
-    try {
-      await api.delete('/users/account');
-      success('Fiók törölve. Viszlát!');
-      logout();
-      navigate('/');
-    } catch (error) {
-      alertError('Hiba történt: ' + (error.response?.data?.message || error.message));
-    }
+  const handleDeleteAccount = () => {
+    setConfirmModal({
+      isOpen: true,
+      text: 'Biztosan törölni szeretnéd a fiókodat? Ez a művelet nem visszavonható!',
+      action: () => {
+        // Késleltetjük egy picit a második modalt, hogy simább legyen az átmenet
+        setTimeout(() => {
+          setConfirmModal({
+            isOpen: true,
+            text: 'Utoljára kérdezzük: tényleg törölni szeretnéd az összes hirdetésedet és adatodat?',
+            action: async () => {
+              try {
+                await api.delete('/users/account');
+                success('Fiók törölve. Viszlát!');
+                logout();
+                navigate('/');
+              } catch (error) {
+                alertError('Hiba történt: ' + (error.response?.data?.message || error.message));
+              }
+            }
+          });
+        }, 100);
+      }
+    });
   };
 
   if (!user) {
@@ -224,7 +232,7 @@ export default function Profile() {
         <h1 className="text-2xl md:text-4xl font-bold text-white mb-6 md:mb-8">Profil beállítások</h1>
 
         {message && (
-          <div className={`mb-6 p-4 rounded-lg ${message.includes('✅') ? 'bg-green-600' : 'bg-red-600'} text-white`}>
+          <div className={`mb-6 p-4 rounded-lg ${message.toLowerCase().includes('sikeresen') || message.toLowerCase().includes('sikeres') || message.toLowerCase().includes('feltöltve') || message.toLowerCase().includes('megváltoztatva') || message.toLowerCase().includes('frissítve') ? 'bg-green-600' : 'bg-red-600'} text-white`}>
             {message}
           </div>
         )}
@@ -483,6 +491,34 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-2xl p-6 max-w-md w-full shadow-2xl border border-gray-700">
+            <h3 className="text-xl font-bold text-white mb-2">Megerősítés szükséges</h3>
+            <p className="text-gray-300 mb-6">{confirmModal.text}</p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setConfirmModal({ isOpen: false, text: '', action: null })}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition"
+              >
+                Mégse
+              </button>
+              <button
+                onClick={() => {
+                  if (confirmModal.action) confirmModal.action();
+                  if (!confirmModal.action?.toString().includes('Utoljára kérdezzük')) {
+                    setConfirmModal({ isOpen: false, text: '', action: null });
+                  }
+                }}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition"
+              >
+                Tovább
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
