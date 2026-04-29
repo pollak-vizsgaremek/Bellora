@@ -4,12 +4,14 @@
 USE bellora;
 
 -- Insert sample users
-INSERT INTO users (user_id, username, email, password_hash, full_name, phone, address, city, postal_code, join_date, daily_offers_count, last_offer_reset, profile_image) VALUES
-(1, 'anna_fashion', 'anna@example.com', '$2b$10$hR90GLItIK2P2xQB78dsmu2mtNmhY6M7VEMkMAZtFIcSqMqwWUXZm', 'Kiss Anna', '+36301234567', 'Petőfi u. 12', 'Budapest', '1052', '2025-06-02 18:22:09', 0, '2025-12-04', '/uploads/profile1.jpg'),
-(2, 'peter_tech', 'peter@example.com', '$2b$10$hR90GLItIK2P2xQB78dsmu2mtNmhY6M7VEMkMAZtFIcSqMqwWUXZm', 'Nagy Péter', '+36309876543', 'Kossuth Lajos u. 45', 'Debrecen', '4025', '2025-08-02 18:22:09', 0, NULL, '/uploads/profile2.jpg'),
-(3, 'eva_home', 'eva@example.com', '$2b$10$hR90GLItIK2P2xQB78dsmu2mtNmhY6M7VEMkMAZtFIcSqMqwWUXZm', 'Tóth Éva', '+36205551234', 'Rákóczi út 78', 'Szeged', '6721', '2025-09-02 18:22:09', 0, NULL, '/uploads/profile3.jpg'),
-(4, 'janos_sport', 'janos@example.com', '$2b$10$hR90GLItIK2P2xQB78dsmu2mtNmhY6M7VEMkMAZtFIcSqMqwWUXZm', 'Szabó János', '+36707778899', 'Dózsa György út 23', 'Pécs', '7621', '2025-10-02 18:22:09', 0, NULL, '/uploads/profile4.jpg'),
-(5, 'zsuzsa_books', 'zsuzsa@example.com', '$2b$10$hR90GLItIK2P2xQB78dsmu2mtNmhY6M7VEMkMAZtFIcSqMqwWUXZm', 'Horváth Zsuzsa', '+36303334455', 'Váci út 101', 'Győr', '9021', '2025-11-02 19:22:09', 0, NULL, '/uploads/profile5.jpg');
+INSERT INTO `users` (`user_id`, `username`, `email`, `password_hash`, `full_name`, `phone`, `address`, `city`, `postal_code`, `join_date`, `daily_offers_count`, `last_offer_reset`, `profile_image`, `role`) VALUES
+(1, 'anna_fashion', 'anna@example.com', '$2b$10$hR90GLItIK2P2xQB78dsmu2mtNmhY6M7VEMkMAZtFIcSqMqwWUXZm', 'Kiss Anna', '+36301234567', NULL, 'Budapest', NULL, '2025-06-02 18:22:09', 0, '2025-12-04', NULL, 'user'),
+(2, 'peter_tech', 'peter@example.com', '$2b$10$hR90GLItIK2P2xQB78dsmu2mtNmhY6M7VEMkMAZtFIcSqMqwWUXZm', 'Nagy Péter', '+36309876543', NULL, 'Debrecen', NULL, '2025-08-02 18:22:09', 0, NULL, NULL, 'user'),
+(3, 'eva_home', 'eva@example.com', '$2b$10$hR90GLItIK2P2xQB78dsmu2mtNmhY6M7VEMkMAZtFIcSqMqwWUXZm', 'Tóth Éva', '+36205551234', NULL, 'Szeged', NULL, '2025-09-02 18:22:09', 0, NULL, NULL, 'user'),
+(4, 'janos_sport', 'janos@example.com', '$2b$10$hR90GLItIK2P2xQB78dsmu2mtNmhY6M7VEMkMAZtFIcSqMqwWUXZm', 'Szabó János', '+36707778899', NULL, 'Pécs', NULL, '2025-10-02 18:22:09', 0, NULL, NULL, 'user'),
+(5, 'zsuzsa_books', 'zsuzsa@example.com', '$2b$10$hR90GLItIK2P2xQB78dsmu2mtNmhY6M7VEMkMAZtFIcSqMqwWUXZm', 'Horváth Zsuzsa', '+36303334455', NULL, 'Győr', NULL, '2025-11-02 19:22:09', 0, NULL, NULL, 'user'),
+(11, 'teszt', 'teszt@teszt.teszt', '$2b$10$YydqieDZ0Y/m62cBuOqSTOmhI59vLLAnqWG4VCz9wU6FHiOTmPXC6', NULL, NULL, NULL, NULL, NULL, '2026-04-29 04:42:43', 0, NULL, NULL, 'user'),
+(12, 'admin', 'admin@admin.admin', '$2b$10$u6t1/EV8NPEsAN71DcJjqOPdT1PVbp1HmhRgdPC/znrtFfZz5yFQu', NULL, NULL, NULL, NULL, NULL, '2026-04-29 04:44:18', 0, NULL, NULL, 'admin');
 
 -- Insert sample items
 INSERT INTO items (item_id, user_id, category_id, title, description, price, status, created_at) VALUES
