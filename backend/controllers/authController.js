@@ -5,6 +5,10 @@ import jwt from 'jsonwebtoken';
 export const register = async (req, res) => {
   try {
     const { username, email, password } = req.body;
+
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: 'Minden mező kitöltése kötelező' });
+    }
     
     const existing = await prisma.users.findFirst({
       where: {
@@ -36,6 +40,10 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email és jelszó megadása kötelező' });
+    }
     
     const user = await prisma.users.findUnique({ where: { email } });
     if (!user) {

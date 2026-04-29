@@ -165,7 +165,20 @@ export default function Admin() {
           <h1 className="text-2xl md:text-4xl font-bold text-white">Admin Panel</h1>
         </div>
 
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+        <div className="md:hidden mb-6">
+          <select
+            value={activeTab}
+            onChange={(e) => setActiveTab(e.target.value)}
+            className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg border border-gray-700 text-sm font-medium appearance-none cursor-pointer"
+            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239ca3af' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}
+          >
+            {tabs.map(tab => (
+              <option key={tab.id} value={tab.id}>{tab.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="hidden md:flex gap-2 mb-6">
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition whitespace-nowrap text-sm ${activeTab === tab.id ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'}`}>
@@ -180,7 +193,6 @@ export default function Admin() {
           </div>
         ) : (
           <>
-            {/* DASHBOARD */}
             {activeTab === 'dashboard' && stats && (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {[
@@ -200,16 +212,47 @@ export default function Admin() {
               </div>
             )}
 
-            {/* USERS */}
             {activeTab === 'users' && (
-              <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
-                <div className="overflow-x-auto">
+              <>
+                <div className="md:hidden space-y-3">
+                  {users.map(u => (
+                    <div key={u.user_id} className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                      <div className="flex items-center gap-3 mb-3">
+                        {u.profile_image ? (
+                          <img src={`${import.meta.env.VITE_BASE_URL}${u.profile_image}`} className="w-10 h-10 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">{u.username?.charAt(0).toUpperCase()}</div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white font-medium text-sm">{u.username}</p>
+                          <p className="text-gray-400 text-xs truncate">{u.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between text-sm mb-3">
+                        <span className="text-gray-400">Hirdetések: <span className="text-white">{u.items_count}</span></span>
+                        <select value={u.role} onChange={(e) => handleUpdateRole(u.user_id, e.target.value)}
+                          disabled={u.user_id === user.user_id}
+                          className="bg-gray-700 text-white text-xs rounded-lg px-2 py-1 border border-gray-600 disabled:opacity-50">
+                          <option value="user">User</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      </div>
+                      <div className="flex gap-2 border-t border-gray-700 pt-3">
+                        <button onClick={() => navigate(`/user/${u.user_id}`)} className="flex-1 text-center text-blue-400 hover:text-blue-300 transition text-sm flex items-center justify-center gap-1"><Eye size={14} /> Profil</button>
+                        {u.user_id !== user.user_id && (
+                          <button onClick={() => handleDeleteUser(u.user_id)} className="flex-1 text-center text-red-400 hover:text-red-300 transition text-sm flex items-center justify-center gap-1"><Trash2 size={14} /> Törlés</button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="hidden md:block bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
                   <table className="w-full text-left">
                     <thead className="bg-gray-700/50">
                       <tr>
                         <th className="px-4 py-3 text-gray-300 text-sm font-semibold">Felhasználó</th>
-                        <th className="px-4 py-3 text-gray-300 text-sm font-semibold hidden md:table-cell">Email</th>
-                        <th className="px-4 py-3 text-gray-300 text-sm font-semibold hidden md:table-cell">Hirdetések</th>
+                        <th className="px-4 py-3 text-gray-300 text-sm font-semibold">Email</th>
+                        <th className="px-4 py-3 text-gray-300 text-sm font-semibold">Hirdetések</th>
                         <th className="px-4 py-3 text-gray-300 text-sm font-semibold">Szerep</th>
                         <th className="px-4 py-3 text-gray-300 text-sm font-semibold">Műveletek</th>
                       </tr>
@@ -224,14 +267,11 @@ export default function Admin() {
                               ) : (
                                 <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">{u.username?.charAt(0).toUpperCase()}</div>
                               )}
-                              <div>
-                                <p className="text-white font-medium text-sm">{u.username}</p>
-                                <p className="text-gray-500 text-xs md:hidden">{u.email}</p>
-                              </div>
+                              <p className="text-white font-medium text-sm">{u.username}</p>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-gray-400 text-sm hidden md:table-cell">{u.email}</td>
-                          <td className="px-4 py-3 text-gray-400 text-sm hidden md:table-cell">{u.items_count}</td>
+                          <td className="px-4 py-3 text-gray-400 text-sm">{u.email}</td>
+                          <td className="px-4 py-3 text-gray-400 text-sm">{u.items_count}</td>
                           <td className="px-4 py-3">
                             <select value={u.role} onChange={(e) => handleUpdateRole(u.user_id, e.target.value)}
                               disabled={u.user_id === user.user_id}
@@ -242,9 +282,9 @@ export default function Admin() {
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex gap-2">
-                              <button onClick={() => navigate(`/user/${u.user_id}`)} className="text-blue-400 hover:text-blue-300 transition" title="Profil"><Eye size={16} /></button>
+                              <button onClick={() => navigate(`/user/${u.user_id}`)} className="text-blue-400 hover:text-blue-300 transition"><Eye size={16} /></button>
                               {u.user_id !== user.user_id && (
-                                <button onClick={() => handleDeleteUser(u.user_id)} className="text-red-400 hover:text-red-300 transition" title="Törlés"><Trash2 size={16} /></button>
+                                <button onClick={() => handleDeleteUser(u.user_id)} className="text-red-400 hover:text-red-300 transition"><Trash2 size={16} /></button>
                               )}
                             </div>
                           </td>
@@ -253,21 +293,53 @@ export default function Admin() {
                     </tbody>
                   </table>
                 </div>
-              </div>
+              </>
             )}
 
-            {/* ITEMS */}
             {activeTab === 'items' && (
-              <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
-                <div className="overflow-x-auto">
+              <>
+                <div className="md:hidden space-y-3">
+                  {items.map(item => (
+                    <div key={item.item_id} className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                      <div className="flex items-center gap-3 mb-3">
+                        {item.image_url ? (
+                          <img src={`${import.meta.env.VITE_BASE_URL}${item.image_url}`} className="w-12 h-12 rounded-lg object-cover" />
+                        ) : (
+                          <div className="w-12 h-12 bg-gray-700 rounded-lg flex items-center justify-center"><Package size={16} className="text-gray-500" /></div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm font-medium truncate">{item.title}</p>
+                          <p className="text-gray-400 text-xs">{item.seller_name}</p>
+                        </div>
+                        <p className="text-white font-semibold text-sm">{Number(item.price).toLocaleString()} Ft</p>
+                      </div>
+                      <div className="flex items-center justify-between mb-3">
+                        <select value={item.status} onChange={(e) => handleUpdateItemStatus(item.item_id, e.target.value)}
+                          className="bg-gray-700 text-white text-xs rounded-lg px-2 py-1 border border-gray-600">
+                          <option value="available">Elérhető</option>
+                          <option value="sold">Eladva</option>
+                          <option value="reserved">Foglalt</option>
+                        </select>
+                        {item.reports_count > 0 && (
+                          <span className="bg-red-500/20 text-red-400 px-2 py-1 rounded-full text-xs font-semibold">{item.reports_count} bejelentés</span>
+                        )}
+                      </div>
+                      <div className="flex gap-2 border-t border-gray-700 pt-3">
+                        <button onClick={() => navigate(`/item/${item.item_id}`)} className="flex-1 text-center text-blue-400 hover:text-blue-300 transition text-sm flex items-center justify-center gap-1"><Eye size={14} /> Megtekintés</button>
+                        <button onClick={() => handleDeleteItem(item.item_id)} className="flex-1 text-center text-red-400 hover:text-red-300 transition text-sm flex items-center justify-center gap-1"><Trash2 size={14} /> Törlés</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="hidden md:block bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
                   <table className="w-full text-left">
                     <thead className="bg-gray-700/50">
                       <tr>
                         <th className="px-4 py-3 text-gray-300 text-sm font-semibold">Termék</th>
-                        <th className="px-4 py-3 text-gray-300 text-sm font-semibold hidden md:table-cell">Eladó</th>
+                        <th className="px-4 py-3 text-gray-300 text-sm font-semibold">Eladó</th>
                         <th className="px-4 py-3 text-gray-300 text-sm font-semibold">Ár</th>
                         <th className="px-4 py-3 text-gray-300 text-sm font-semibold">Státusz</th>
-                        <th className="px-4 py-3 text-gray-300 text-sm font-semibold hidden md:table-cell">Bejelentések</th>
+                        <th className="px-4 py-3 text-gray-300 text-sm font-semibold">Bejelentések</th>
                         <th className="px-4 py-3 text-gray-300 text-sm font-semibold">Műveletek</th>
                       </tr>
                     </thead>
@@ -284,7 +356,7 @@ export default function Admin() {
                               <p className="text-white text-sm font-medium truncate max-w-[150px]">{item.title}</p>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-gray-400 text-sm hidden md:table-cell">{item.seller_name}</td>
+                          <td className="px-4 py-3 text-gray-400 text-sm">{item.seller_name}</td>
                           <td className="px-4 py-3 text-white text-sm font-semibold">{Number(item.price).toLocaleString()} Ft</td>
                           <td className="px-4 py-3">
                             <select value={item.status} onChange={(e) => handleUpdateItemStatus(item.item_id, e.target.value)}
@@ -294,7 +366,7 @@ export default function Admin() {
                               <option value="reserved">Foglalt</option>
                             </select>
                           </td>
-                          <td className="px-4 py-3 hidden md:table-cell">
+                          <td className="px-4 py-3">
                             {item.reports_count > 0 ? (
                               <span className="bg-red-500/20 text-red-400 px-2 py-1 rounded-full text-xs font-semibold">{item.reports_count} db</span>
                             ) : (
@@ -312,20 +384,51 @@ export default function Admin() {
                     </tbody>
                   </table>
                 </div>
-              </div>
+              </>
             )}
 
-            {/* ORDERS */}
             {activeTab === 'orders' && (
-              <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
-                <div className="overflow-x-auto">
+              <>
+                <div className="md:hidden space-y-3">
+                  {orders.length === 0 && <p className="text-center text-gray-500 py-8">Nincs rendelés</p>}
+                  {orders.map(order => (
+                    <div key={order.order_id} className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                      <div className="flex items-center gap-3 mb-3">
+                        {order.image_url ? (
+                          <img src={`${import.meta.env.VITE_BASE_URL}${order.image_url}`} className="w-12 h-12 rounded-lg object-cover" />
+                        ) : (
+                          <div className="w-12 h-12 bg-gray-700 rounded-lg"></div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm font-medium truncate">{order.title}</p>
+                          <p className="text-gray-400 text-xs">{Number(order.price).toLocaleString()} Ft</p>
+                        </div>
+                        <span className="text-gray-500 text-xs">#{order.order_id}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+                        <span className="text-gray-400">Vevő: <span className="text-white">{order.buyer_name}</span></span>
+                        <span className="text-gray-400">Eladó: <span className="text-white">{order.seller_name}</span></span>
+                      </div>
+                      <div className="flex items-center justify-between border-t border-gray-700 pt-3">
+                        <select value={order.status} onChange={(e) => handleUpdateOrderStatus(order.order_id, e.target.value)}
+                          className="bg-gray-700 text-white text-xs rounded-lg px-2 py-1 border border-gray-600">
+                          <option value="pending">Függőben</option>
+                          <option value="completed">Teljesítve</option>
+                          <option value="cancelled">Törölve</option>
+                        </select>
+                        <button onClick={() => handleDeleteOrder(order.order_id)} className="text-red-400 hover:text-red-300 transition text-sm flex items-center gap-1"><Trash2 size={14} /> Törlés</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="hidden md:block bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
                   <table className="w-full text-left">
                     <thead className="bg-gray-700/50">
                       <tr>
                         <th className="px-4 py-3 text-gray-300 text-sm font-semibold">#</th>
                         <th className="px-4 py-3 text-gray-300 text-sm font-semibold">Termék</th>
-                        <th className="px-4 py-3 text-gray-300 text-sm font-semibold hidden md:table-cell">Vevő</th>
-                        <th className="px-4 py-3 text-gray-300 text-sm font-semibold hidden md:table-cell">Eladó</th>
+                        <th className="px-4 py-3 text-gray-300 text-sm font-semibold">Vevő</th>
+                        <th className="px-4 py-3 text-gray-300 text-sm font-semibold">Eladó</th>
                         <th className="px-4 py-3 text-gray-300 text-sm font-semibold">Státusz</th>
                         <th className="px-4 py-3 text-gray-300 text-sm font-semibold">Műveletek</th>
                       </tr>
@@ -347,8 +450,8 @@ export default function Admin() {
                               </div>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-gray-400 text-sm hidden md:table-cell">{order.buyer_name}</td>
-                          <td className="px-4 py-3 text-gray-400 text-sm hidden md:table-cell">{order.seller_name}</td>
+                          <td className="px-4 py-3 text-gray-400 text-sm">{order.buyer_name}</td>
+                          <td className="px-4 py-3 text-gray-400 text-sm">{order.seller_name}</td>
                           <td className="px-4 py-3">
                             <select value={order.status} onChange={(e) => handleUpdateOrderStatus(order.order_id, e.target.value)}
                               className="bg-gray-700 text-white text-xs rounded-lg px-2 py-1 border border-gray-600">
@@ -364,12 +467,11 @@ export default function Admin() {
                       ))}
                     </tbody>
                   </table>
+                  {orders.length === 0 && <p className="text-center text-gray-500 py-8">Nincs rendelés</p>}
                 </div>
-                {orders.length === 0 && <p className="text-center text-gray-500 py-8">Nincs rendelés</p>}
-              </div>
+              </>
             )}
 
-            {/* REPORTS */}
             {activeTab === 'reports' && (
               <div className="space-y-4">
                 {reports.length === 0 && <p className="text-center text-gray-500 py-8">Nincs bejelentés</p>}
@@ -388,15 +490,15 @@ export default function Admin() {
                           <p className="text-gray-500 text-xs">{new Date(r.created_at).toLocaleDateString('hu-HU')}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 flex-wrap">
                         {statusBadge(r.status)}
                         {r.status === 'pending' && (
-                          <div className="flex gap-2">
-                            <button onClick={() => handleUpdateReportStatus(r.report_id, 'reviewed')} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-xs transition flex items-center gap-1">
-                              <CheckCircle size={14} /> Jogos (Hirdetés törlése)
+                          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                            <button onClick={() => handleUpdateReportStatus(r.report_id, 'reviewed')} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs transition flex items-center justify-center gap-1">
+                              <CheckCircle size={14} /> Jogos (Törlés)
                             </button>
-                            <button onClick={() => handleUpdateReportStatus(r.report_id, 'dismissed')} className="bg-gray-600 hover:bg-gray-500 text-white px-3 py-1 rounded-lg text-xs transition flex items-center gap-1">
-                              <XCircle size={14} /> Alaptalan (Megtartás)
+                            <button onClick={() => handleUpdateReportStatus(r.report_id, 'dismissed')} className="bg-gray-600 hover:bg-gray-500 text-white px-3 py-1.5 rounded-lg text-xs transition flex items-center justify-center gap-1">
+                              <XCircle size={14} /> Alaptalan
                             </button>
                           </div>
                         )}

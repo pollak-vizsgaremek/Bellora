@@ -11,8 +11,7 @@ describe("Auth API Végpontok tesztelése", () => {
   describe("POST /api/auth/login", () => {
     it("hibát kell adnia hiányzó adatok esetén", async () => {
       const response = await request(app).post("/api/auth/login").send({});
-      // Üres email-lel Prisma validation error -> 500
-      expect([400, 500]).toContain(response.status);
+      expect(response.status).toBe(400);
       expect(response.body).toHaveProperty("message");
     });
 
@@ -29,8 +28,7 @@ describe("Auth API Végpontok tesztelése", () => {
   describe("POST /api/auth/register", () => {
     it("hibát kell adnia hiányzó adatok esetén", async () => {
       const response = await request(app).post("/api/auth/register").send({});
-      // Üres adatokkal bcrypt/Prisma error -> 500
-      expect([400, 500]).toContain(response.status);
+      expect(response.status).toBe(400);
       expect(response.body).toHaveProperty("message");
     });
   });

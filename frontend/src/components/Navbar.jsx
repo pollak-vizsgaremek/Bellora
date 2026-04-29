@@ -10,6 +10,7 @@ export default function Navbar() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showMobileNotifications, setShowMobileNotifications] = useState(false);
   const [unreadOffers, setUnreadOffers] = useState(0);
   const [notifications, setNotifications] = useState([]);
   const [notificationCount, setNotificationCount] = useState(0);
@@ -118,8 +119,6 @@ export default function Navbar() {
                 >
                   <Plus size={18} /> Új hirdetés
                 </button>
-
-                {/* Notification Dropdown */}
                 <div className="relative" ref={notificationRef}>
                   <button
                     onClick={() => {
@@ -142,7 +141,7 @@ export default function Navbar() {
                       <div className="p-3 border-b border-gray-700 sticky top-0 bg-gray-800">
                         <h3 className="text-white font-semibold">Értesítések</h3>
                       </div>
-                      
+
                       {notifications.length === 0 ? (
                         <div className="p-4 text-center text-gray-400">
                           Nincs új értesítés
@@ -152,64 +151,63 @@ export default function Navbar() {
                           {notifications.map((notif, index) => {
                             const isSeen = seenKeys.has(getNotifKey(notif));
                             return (
-                            <div
-                              key={`${notif.type}-${notif.item_id}-${index}`}
-                              className={`p-3 hover:bg-gray-700 transition cursor-pointer ${isSeen ? 'opacity-60' : ''}`}
-                              onClick={() => {
-                                navigate(`/item/${notif.item_id}`);
-                                setShowNotifications(false);
-                              }}
-                            >
-                              <div className="flex items-start gap-3">
-                                {notif.favoriter_image || notif.buyer_image ? (
-                                  <img
-                                    src={`${import.meta.env.VITE_BASE_URL}${notif.favoriter_image || notif.buyer_image}`}
-                                    alt=""
-                                    className="w-10 h-10 rounded-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                    {(notif.favoriter_name || notif.buyer_name)?.charAt(0).toUpperCase()}
-                                  </div>
-                                )}
-                                
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    {notif.type === 'favorite' && (
-                                      <Heart size={14} className="text-pink-400 flex-shrink-0" fill="currentColor" />
-                                    )}
-                                    {notif.type === 'order' && (
-                                      <ShoppingBag size={14} className="text-green-400 flex-shrink-0" />
-                                    )}
-                                    {notif.type === 'offer' && (
-                                      <Star size={14} className="text-yellow-400 flex-shrink-0" />
-                                    )}
-                                    <span className="text-white text-sm font-medium truncate">
-                                      {notif.favoriter_name || notif.buyer_name}
-                                    </span>
-                                  </div>
-                                  
-                                  <p className="text-gray-300 text-xs">
-                                    {notif.type === 'favorite' && 'kedvencnek jelölte: '}
-                                    {notif.type === 'order' && 'megrendelte: '}
-                                    {notif.type === 'offer' && `ajánlatot tett (${notif.offer_price.toLocaleString()} Ft): `}
-                                    <span className="text-gray-400">{notif.item_title}</span>
-                                  </p>
-                                  
-                                  {notif.type === 'order' && (
-                                    <span className={`text-xs px-2 py-0.5 rounded-full inline-block mt-1 ${
-                                      notif.order_status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                                      notif.order_status === 'completed' ? 'bg-green-500/20 text-green-400' :
-                                      'bg-red-500/20 text-red-400'
-                                    }`}>
-                                      {notif.order_status === 'pending' ? 'Folyamatban' :
-                                       notif.order_status === 'completed' ? 'Teljesítve' : 'Törölve'}
-                                    </span>
+                              <div
+                                key={`${notif.type}-${notif.item_id}-${index}`}
+                                className={`p-3 hover:bg-gray-700 transition cursor-pointer ${isSeen ? 'opacity-60' : ''}`}
+                                onClick={() => {
+                                  navigate(`/item/${notif.item_id}`);
+                                  setShowNotifications(false);
+                                }}
+                              >
+                                <div className="flex items-start gap-3">
+                                  {notif.favoriter_image || notif.buyer_image ? (
+                                    <img
+                                      src={`${import.meta.env.VITE_BASE_URL}${notif.favoriter_image || notif.buyer_image}`}
+                                      alt=""
+                                      className="w-10 h-10 rounded-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                      {(notif.favoriter_name || notif.buyer_name)?.charAt(0).toUpperCase()}
+                                    </div>
                                   )}
+
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      {notif.type === 'favorite' && (
+                                        <Heart size={14} className="text-pink-400 flex-shrink-0" fill="currentColor" />
+                                      )}
+                                      {notif.type === 'order' && (
+                                        <ShoppingBag size={14} className="text-green-400 flex-shrink-0" />
+                                      )}
+                                      {notif.type === 'offer' && (
+                                        <Star size={14} className="text-yellow-400 flex-shrink-0" />
+                                      )}
+                                      <span className="text-white text-sm font-medium truncate">
+                                        {notif.favoriter_name || notif.buyer_name}
+                                      </span>
+                                    </div>
+
+                                    <p className="text-gray-300 text-xs">
+                                      {notif.type === 'favorite' && 'kedvencnek jelölte: '}
+                                      {notif.type === 'order' && 'megrendelte: '}
+                                      {notif.type === 'offer' && `ajánlatot tett (${notif.offer_price.toLocaleString()} Ft): `}
+                                      <span className="text-gray-400">{notif.item_title}</span>
+                                    </p>
+
+                                    {notif.type === 'order' && (
+                                      <span className={`text-xs px-2 py-0.5 rounded-full inline-block mt-1 ${notif.order_status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                                          notif.order_status === 'completed' ? 'bg-green-500/20 text-green-400' :
+                                            'bg-red-500/20 text-red-400'
+                                        }`}>
+                                        {notif.order_status === 'pending' ? 'Folyamatban' :
+                                          notif.order_status === 'completed' ? 'Teljesítve' : 'Törölve'}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          );
+                            );
                           })}
                         </div>
                       )}
@@ -320,9 +318,91 @@ export default function Navbar() {
                 <button onClick={() => { navigate('/new-item'); setShowMobileMenu(false); }} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-center flex items-center justify-center gap-2">
                   <Plus size={18} /> Új hirdetés
                 </button>
+
+                <div className="border-t border-gray-800 pt-3">
+                  <button
+                    onClick={() => {
+                      const opening = !showMobileNotifications;
+                      setShowMobileNotifications(opening);
+                      if (opening) markAllSeen();
+                    }}
+                    className="flex items-center justify-between w-full text-gray-300 hover:text-white transition py-2"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Bell size={18} /> Értesítések
+                      {notificationCount > 0 && (
+                        <span className="bg-green-500 text-white text-xs font-bold rounded-full px-2 py-0.5">
+                          {notificationCount > 9 ? '9+' : notificationCount}
+                        </span>
+                      )}
+                    </span>
+                    <ChevronDown size={16} className={`transition-transform ${showMobileNotifications ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {showMobileNotifications && (
+                    <div className="bg-gray-800 rounded-lg border border-gray-700 mt-1 max-h-64 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="p-4 text-center text-gray-400 text-sm">Nincs új értesítés</div>
+                      ) : (
+                        <div className="divide-y divide-gray-700">
+                          {notifications.map((notif, index) => {
+                            const isSeen = seenKeys.has(getNotifKey(notif));
+                            return (
+                              <div
+                                key={`mob-${notif.type}-${notif.item_id}-${index}`}
+                                className={`p-3 hover:bg-gray-700 transition cursor-pointer ${isSeen ? 'opacity-60' : ''}`}
+                                onClick={() => {
+                                  navigate(`/item/${notif.item_id}`);
+                                  setShowMobileMenu(false);
+                                  setShowMobileNotifications(false);
+                                }}
+                              >
+                                <div className="flex items-start gap-3">
+                                  {notif.favoriter_image || notif.buyer_image ? (
+                                    <img
+                                      src={`${import.meta.env.VITE_BASE_URL}${notif.favoriter_image || notif.buyer_image}`}
+                                      alt=""
+                                      className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                                    />
+                                  ) : (
+                                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                                      {(notif.favoriter_name || notif.buyer_name)?.charAt(0).toUpperCase()}
+                                    </div>
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1 mb-0.5">
+                                      {notif.type === 'favorite' && <Heart size={12} className="text-pink-400 flex-shrink-0" fill="currentColor" />}
+                                      {notif.type === 'order' && <ShoppingBag size={12} className="text-green-400 flex-shrink-0" />}
+                                      {notif.type === 'offer' && <Star size={12} className="text-yellow-400 flex-shrink-0" />}
+                                      <span className="text-white text-xs font-medium truncate">{notif.favoriter_name || notif.buyer_name}</span>
+                                    </div>
+                                    <p className="text-gray-400 text-xs truncate">
+                                      {notif.type === 'favorite' && 'kedvencnek jelölte: '}
+                                      {notif.type === 'order' && 'megrendelte: '}
+                                      {notif.type === 'offer' && `ajánlatot tett (${notif.offer_price.toLocaleString()} Ft): `}
+                                      {notif.item_title}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
                 <div className="border-t border-gray-800 pt-3 mt-2">
                   <div className="text-white mb-3 font-semibold flex items-center gap-2"><User size={18} /> {user.username}</div>
-                  <button onClick={() => { handleLogout(); setShowMobileMenu(false); }} className="w-full bg-red-600 text-white px-4 py-2 rounded-lg">
+                  <button onClick={() => { navigate('/profile'); setShowMobileMenu(false); }} className="text-left text-gray-300 hover:text-white transition py-2 flex items-center gap-2 w-full">
+                    <User size={18} /> Profilom
+                  </button>
+                  {user.role === 'admin' && (
+                    <button onClick={() => { navigate('/admin'); setShowMobileMenu(false); }} className="text-left text-purple-400 hover:text-purple-300 transition py-2 flex items-center gap-2 w-full">
+                      <Shield size={18} /> Admin Panel
+                    </button>
+                  )}
+                  <button onClick={() => { handleLogout(); setShowMobileMenu(false); }} className="w-full bg-red-600 text-white px-4 py-2 rounded-lg mt-2">
                     Kijelentkezés
                   </button>
                 </div>
