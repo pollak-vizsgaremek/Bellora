@@ -9,10 +9,10 @@ A **Bellora** egy Vinted-inspirált online használtruha-piactér alkalmazás, a
 - **Gere Dániel**
 - **Csák Zoltán Barnabás**
 
-## 🎨 Design
+## 🔗 Hasznos linkek
 
-A projekt teljes UI/UX terve megtekinthető Figmában:
-- **[Bellora Figma Design](https://www.figma.com/design/AojE6OGb2ZFhoMrUajjpGx/Bellora?node-id=0-1&t=MG26AZwRbQwF0x4a-1)**
+- **[Figma Design](https://www.figma.com/design/AojE6OGb2ZFhoMrUajjpGx/Bellora?node-id=0-1&t=MG26AZwRbQwF0x4a-1)** - A projekt teljes UI/UX terve
+- **[OnlineGantt](https://www.onlinegantt.com/)** - A projekt ütemtervének (`Gantt diagram.gantt`) megtekintéséhez
 
 ## 🛠️ Technológiai stack
 
@@ -35,6 +35,10 @@ A projekt teljes UI/UX terve megtekinthető Figmában:
 - **Socket.io** - WebSocket kommunikáció valós idejű chathez
 - **Multer** - Fájl feltöltés (képek)
 
+### Tesztelés
+- **Jest** - Backend egység- és integrációs tesztek
+- **Playwright** - Frontend End-to-End (E2E) tesztek
+
 ## 🎯 Főbb funkciók
 
 ✅ **Elkészült funkciók:**
@@ -47,84 +51,28 @@ A projekt teljes UI/UX terve megtekinthető Figmában:
 - **Kedvencek**: Termékek mentése kedvencek közé
 - **Saját hirdetések**: Felhasználók saját hirdetéseinek kezelése
 - **Beszélgetések**: Összes beszélgetés listája és chat felület
+- **Admin dashboard**: Felhasználók és hirdetések kezelése, moderálása
+- **Tesztelés**: Backend egységtesztek (Jest) és frontend E2E tesztek (Playwright)
 
 
-## 🗄️ Adatbázis séma
+## 🗄️ Adatbázis séma (Prisma ORM)
 
-### Táblák
+A projekt adatbázisát a **Prisma** kezeli. A teljes, naprakész séma a `backend/prisma/schema.prisma` fájlban található.
 
-#### Users (Felhasználók)
-- `user_id` - Egyedi azonosító (elsődleges kulcs)
-- `username` - Felhasználónév (egyedi)
-- `email` - E-mail cím (egyedi)
-- `password_hash` - Jelszó hash
-- `join_date` - Regisztráció dátuma
+### Főbb modellek
 
-#### Categories (Kategóriák)
-- `category_id` - Egyedi azonosító (elsődleges kulcs)
-- `name` - Kategória neve
-- `parent_id` - Szülő kategória (hierarchikus struktúra)
-
-#### Items (Termékek)
-- `item_id` - Egyedi azonosító (elsődleges kulcs)
-- `user_id` - Eladó azonosítója (külső kulcs)
-- `category_id` - Kategória azonosítója (külső kulcs)
-- `title` - Termék címe
-- `description` - Termék leírása
-- `price` - Ár
-- `status` - Státusz ENUM (available, sold, reserved)
-- `created_at` - Létrehozás dátuma
-
-#### ItemImages (Termék képek)
-- `image_id` - Egyedi azonosító (elsődleges kulcs)
-- `item_id` - Termék azonosítója (külső kulcs)
-- `image_url` - Kép URL/elérési útja
-- `is_primary` - Főkép-e (boolean)
-- `display_order` - Megjelenítési sorrend
-- `uploaded_at` - Feltöltés dátuma
-
-#### Orders (Rendelések)
-- `order_id` - Egyedi azonosító (elsődleges kulcs)
-- `buyer_id` - Vevő azonosítója (külső kulcs)
-- `seller_id` - Eladó azonosítója (külső kulcs)
-- `item_id` - Termék azonosítója (külső kulcs)
-- `order_date` - Rendelés dátuma
-- `status` - Rendelés státusza ENUM (pending, completed, cancelled)
-
-#### Payments (Fizetések)
-- `payment_id` - Egyedi azonosító (elsődleges kulcs)
-- `order_id` - Rendelés azonosítója (külső kulcs)
-- `amount` - Fizetett összeg
-- `method` - Fizetési módszer
-- `status` - Fizetés státusza ENUM (pending, completed, failed)
-- `created_at` - Létrehozás dátuma
-
-#### Messages (Üzenetek)
-- `message_id` - Egyedi azonosító (elsődleges kulcs)
-- `sender_id` - Küldő azonosítója (külső kulcs)
-- `receiver_id` - Címzett azonosítója (külső kulcs)
-- `content` - Üzenet tartalma
-- `sent_at` - Küldés dátuma
-
-#### Favorites (Kedvencek)
-- `user_id` - Felhasználó azonosítója (összetett elsődleges kulcs)
-- `item_id` - Termék azonosítója (összetett elsődleges kulcs)
-
-#### Reviews (Értékelések)
-- `review_id` - Egyedi azonosító (elsődleges kulcs)
-- `reviewer_id` - Értékelő azonosítója (külső kulcs)
-- `reviewed_user_id` - Értékelt felhasználó azonosítója (külső kulcs)
-- `rating` - Értékelés (1-5 csillag)
-- `comment` - Szöveges értékelés
-- `created_at` - Létrehozás dátuma
-
-#### Shipping (Szállítás)
-- `shipping_id` - Egyedi azonosító (elsődleges kulcs)
-- `order_id` - Rendelés azonosítója (külső kulcs)
-- `address` - Szállítási cím
-- `carrier` - Futárszolgálat
-- `tracking_number` - Követőszám
-- `status` - Szállítás státusza ENUM (processing, shipped, delivered, cancelled)
+- **users**: Felhasználói fiókok (vásárlók és adminok a `role` alapján).
+- **categories**: Termékkategóriák hierarchikus felépítéssel (`parent_id`).
+- **items**: Feltöltött hirdetések/termékek állapotokkal (elérhető, eladva, lefoglalva).
+- **itemimages**: Termékekhez tartozó képek (több kép, `is_primary` beállítással).
+- **offers**: Árajánlatok a vevők részéről az eladók felé (viszontajánlat támogatással).
+- **orders**: Leadott rendelések.
+- **payments**: Fizetési tranzakciók.
+- **shipping**: Szállítási adatok és nyomkövetés.
+- **messages**: Valós idejű chat üzenetek (akár egy konkrét ajánlathoz, `offer_id` kötve).
+- **favorites**: Felhasználók kedvenc termékei.
+- **reviews**: Felhasználói értékelések (1-5 csillagos skálán).
+- **reports**: Moderálásra váró jelentések és visszaélések.
 ## 🚀 Telepítés és indítás
 
 ### Előfeltételek
@@ -140,17 +88,20 @@ cd backend
 npm install
 ```
 
-2. Hozz létre egy `.env` fájlt:
+2. Hozz létre egy `.env` fájlt (állítsd be a Prisma `DATABASE_URL`-t):
 ```env
 PORT=5000
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=
-DB_NAME=bellora
+DATABASE_URL="mysql://root:@localhost:3306/bellora"
 JWT_SECRET=bellora_super_secret_jwt_key_2025
 ```
 
-3. Indítsd el a szervert:
+3. Inicializáld az adatbázist a Prismával:
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+4. Indítsd el a szervert:
 ```bash
 npm run dev
 ```
@@ -193,117 +144,15 @@ Bellora/
 ├── backend/                  # Node.js szerver
 │   ├── config/              # Konfigurációk
 │   ├── controllers/         # Route controllerek
-│   ├── models/              # Adatbázis modellek
+│   ├── prisma/              # Prisma adatbázis sémák és modellek
 │   ├── routes/              # API route-ok
 │   ├── middleware/          # Middleware-ek
 │   ├── utils/               # Segédfüggvények
 │   ├── uploads/             # Feltöltött képek
 │   └── server.js
 │
-├── bellora_schema.sql       # MySQL séma
-├── Ballora_ERD.drawio       # ERD diagram
-└── README.MD
+├── docs/                     # Dokumentációk, diagramok (README.md, Gantt)
 ```
-
-## 💡 További fejlesztési ötletek
-
-
-1. **Képfeltöltés és galéria**
-   - Több kép feltöltése termékekhez
-   - Képek optimalizálása és thumbnail generálás
-   - Drag & drop funkcionalitás
-   - Képszerkesztő (crop, rotate)
-
-2. **Keresés és szűrés**
-   - Full-text keresés
-   - Szűrés ár, méret, márka, állapot szerint
-   - Rendezési opciók (legújabb, legolcsóbb, stb.)
-   - Autocomplete keresőmező
-
-3. **Profil oldal**
-   - Felhasználói profilok
-   - Értékelések és visszajelzések megjelenítése
-   - Saját termékek listája
-   - Eladási statisztikák
-
-4. **Valós idejű chat**
-   - Socket.io alapú üzenetküldés
-   - Online/offline státusz
-   - Üzenet értesítések
-   - Képküldés a chatben
-
-5. **Értesítési rendszer**
-   - Push értesítések
-   - Email értesítések
-   - In-app értesítések
-   - Értesítési beállítások
-
-6. **Fizetési integráció**
-   - Stripe/PayPal integráció
-   - Biztonságos fizetés
-   - Tranzakció történet
-   - Visszatérítések kezelése
-
-7. **Speciális szűrők**
-   - Mérettáblázat
-   - Márka filter
-   - Szín filter
-   - Állapot (új, használt, megkímélt)
-
-8. **Ajánló rendszer**
-   - Hasonló termékek ajánlása
-   - Személyre szabott ajánlatok
-   - "Neked ajánljuk" szekció
-
-9. **Közösségi funkciók**
-   - Felhasználók követése
-   - Kedvenc eladók
-   - Profil megosztás
-
-10. **Admin dashboard**
-    - Felhasználók kezelése
-    - Termékek moderálása
-    - Statisztikák és grafikonok
-    - Visszaélések kezelése
-
-11. **Többnyelvűség**
-    - i18n integráció
-    - Magyar és angol nyelv
-    - Nyelvváltó funkció
-
-12. **SEO optimalizáció**
-    - Meta tagek
-    - Open Graph
-    - Sitemap generálás
-    - Structured data
-
-13. **Mobilalkalmazás**
-    - React Native verzió
-    - Push notificationök
-    - Natív funkciók használata
-
-14. **Analytics és metrikák**
-    - Google Analytics integráció
-    - Felhasználói viselkedés követése
-    - Konverziós metrikák
-    - A/B tesztelés
-
-15. **Prémium funkciók**
-    - Kiemelt termékek
-    - Előre sorolt listázás
-    - Prémium badge
-    - Hirdetési lehetőségek
-
-17. **Wishlist és riasztások**
-    - Kívánságlista
-    - Árcsökkenési értesítések
-    - Újra készleten értesítések
-
-18. **Adatvédelem és biztonság**
-    - GDPR megfelelés
-    - Két-faktoros autentikáció
-    - Adatok exportálása
-    - Fiók törlés opció
 
 ## 📝 API Endpoints
 
@@ -331,18 +180,29 @@ Bellora/
 
 ### Categories (Kategóriák)
 - `GET /api/categories` - Kategóriák listája ✅
-- `GET /api/messages` - Üzenetek listája
-- `POST /api/messages` - Üzenet küldése
-- `GET /api/messages/:userId` - Chat egy felhasználóval
 
-### Favorites
-- `POST /api/favorites` - Kedvenc hozzáadása
-- `DELETE /api/favorites/:itemId` - Kedvenc eltávolítása
-- `GET /api/favorites` - Saját kedvencek
+### Offers (Ajánlatok)
+- `POST /api/offers` - Ajánlat küldése ✅
+- `GET /api/offers/item/:itemId` - Ajánlatok egy termékhez ✅
+- `PUT /api/offers/:offerId/accept` - Ajánlat elfogadása ✅
+- `PUT /api/offers/:offerId/reject` - Ajánlat elutasítása ✅
+- `PUT /api/offers/:offerId/counter` - Viszontajánlat tétele ✅
 
-## 📊 Adatbázis diagram
+### Orders (Rendelések)
+- `POST /api/orders` - Rendelés leadása ✅
+- `GET /api/orders/my-orders` - Saját rendelések ✅
+- `GET /api/orders/my-sales` - Saját eladások ✅
+- `PUT /api/orders/:id/status` - Rendelés állapotának frissítése ✅
 
-Az adatbázis entitás-kapcsolat diagramja (ERD) megtalálható a `Ballora_ERD.drawio` fájlban. A diagram megtekintéséhez használja a [draw.io](https://app.diagrams.net/) alkalmazást.
+### Reports (Jelentések)
+- `POST /api/reports` - Visszaélés jelentése ✅
+
+### Admin (Adminisztráció)
+- `GET /api/admin/stats` - Dashboard statisztikák ✅
+- `GET /api/admin/users` - Felhasználók kezelése ✅
+- `GET /api/admin/items` - Termékek moderálása ✅
+- `GET /api/admin/reports` - Jelentések listája ✅
+
 
 **Készítette**: Gere Dániel & Csák Zoltán Barnabás | **Projekt**: Bellora - Vinted Clone
 
