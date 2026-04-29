@@ -14,11 +14,11 @@ export const getUserById = async (req, res) => {
         join_date: true
       }
     });
-    
+
     if (!user) {
       return res.status(404).json({ message: 'Felhasználó nem található' });
     }
-    
+
     res.json({ user });
   } catch (error) {
     console.error(error);
@@ -42,13 +42,13 @@ export const getUserItems = async (req, res) => {
       },
       orderBy: { created_at: 'desc' }
     });
-    
+
     const result = items.map(item => ({
       ...item,
       image_url: item.itemimages[0]?.image_url || null,
       itemimages: undefined
     }));
-    
+
     res.json({ items: result });
   } catch (error) {
     console.error(error);
@@ -61,14 +61,14 @@ export const uploadProfileImage = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: 'Nincs kép feltöltve' });
     }
-    
+
     const imageUrl = `/uploads/${req.file.filename}`;
-    
+
     await prisma.users.update({
       where: { user_id: req.user.user_id },
       data: { profile_image: imageUrl }
     });
-    
+
     res.json({ message: 'Profilkép feltöltve', image_url: imageUrl });
   } catch (error) {
     console.error(error);
@@ -79,12 +79,12 @@ export const uploadProfileImage = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     const { full_name, phone, address, city, postal_code } = req.body;
-    
+
     await prisma.users.update({
       where: { user_id: req.user.user_id },
       data: { full_name, phone, address, city, postal_code }
     });
-    
+
     res.json({ message: 'Profil frissítve' });
   } catch (error) {
     console.error(error);
@@ -95,27 +95,27 @@ export const updateProfile = async (req, res) => {
 export const changePassword = async (req, res) => {
   try {
     const { old_password, new_password } = req.body;
-    
+
     const user = await prisma.users.findUnique({
       where: { user_id: req.user.user_id },
       select: { password_hash: true }
     });
-    
+
     if (!user) {
       return res.status(404).json({ message: 'Felhasználó nem található' });
     }
-    
+
     const valid = await bcrypt.compare(old_password, user.password_hash);
     if (!valid) {
       return res.status(401).json({ message: 'Hibás jelenlegi jelszó' });
     }
-    
+
     const hashedPassword = await bcrypt.hash(new_password, 10);
     await prisma.users.update({
       where: { user_id: req.user.user_id },
       data: { password_hash: hashedPassword }
     });
-    
+
     res.json({ message: 'Jelszó megváltoztatva' });
   } catch (error) {
     console.error(error);
@@ -125,11 +125,10 @@ export const changePassword = async (req, res) => {
 
 export const deleteAccount = async (req, res) => {
   try {
-    // Prisma cascading deletes handle related records
     await prisma.users.delete({
       where: { user_id: req.user.user_id }
     });
-    
+
     res.json({ message: 'Fiók törölve' });
   } catch (error) {
     console.error(error);

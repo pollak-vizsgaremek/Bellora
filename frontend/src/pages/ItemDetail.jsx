@@ -523,7 +523,7 @@ export default function ItemDetail() {
                     </button>
                   ) : (
                     <div className="w-full bg-gray-700 text-gray-400 py-3 md:py-4 rounded-xl font-bold text-base md:text-lg flex items-center justify-center gap-2 border-2 border-gray-600">
-                      <X className="w-5 h-5 md:w-6 md:h-6" /> 
+                      <X className="w-5 h-5 md:w-6 md:h-6" />
                       {item.status === 'sold' ? 'Eladva' : 'Nem elérhető'}
                     </div>
                   )}
@@ -576,7 +576,6 @@ export default function ItemDetail() {
         </div>
       </div>
 
-      {/* Buy Confirmation Modal */}
       {showBuyModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-gray-800 rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-gray-700">

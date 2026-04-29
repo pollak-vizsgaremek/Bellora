@@ -11,7 +11,7 @@ export default function EditItem() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { success, error: alertError } = useAlert();
-  
+
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -39,13 +39,13 @@ export default function EditItem() {
     try {
       const response = await api.get(`/items/${id}`);
       const item = response.data.item;
-      
+
       if (item.user_id !== user.user_id) {
         alertError('Nincs jogosultságod szerkeszteni ezt a hirdetést');
         navigate('/');
         return;
       }
-      
+
       setFormData({
         title: item.title,
         description: item.description || '',
@@ -53,10 +53,10 @@ export default function EditItem() {
         category_id: item.category_id,
         status: item.status
       });
-      
+
       const imagesResponse = await api.get(`/items/${id}/images`);
       setExistingImages(imagesResponse.data.images || []);
-      
+
       setLoading(false);
     } catch (error) {
       console.error('Hiba:', error);
@@ -85,7 +85,7 @@ export default function EditItem() {
 
   const deleteExistingImage = async (imageId) => {
     if (!confirm('Biztosan törölni szeretnéd ezt a képet?')) return;
-    
+
     try {
       await api.delete(`/items/${id}/images/${imageId}`);
       setExistingImages(existingImages.filter(img => img.image_id !== imageId));
@@ -122,22 +122,22 @@ export default function EditItem() {
     const draggedItem = newImages[draggedIndex];
     newImages.splice(draggedIndex, 1);
     newImages.splice(index, 0, draggedItem);
-    
+
     setExistingImages(newImages);
     setDraggedIndex(index);
   };
 
   const handleDragEnd = async () => {
     if (draggedIndex === null) return;
-    
+
     try {
       const orderData = existingImages.map((img, index) => ({
         image_id: img.image_id,
         display_order: index
       }));
-      
+
       await api.put(`/items/${id}/images/reorder`, { images: orderData });
-      
+
       if (existingImages.length > 0) {
         await setPrimaryImage(existingImages[0].image_id);
       }
@@ -145,18 +145,18 @@ export default function EditItem() {
       console.error('Hiba:', error);
       alertError('Nem sikerült frissíteni a sorrrendet');
     }
-    
+
     setDraggedIndex(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.title || !formData.price) {
       alertError('Kérlek töltsd ki a kötelező mezőket!');
       return;
     }
-    
+
     if (!formData.price || parseFloat(formData.price) <= 0) {
       alertError('Az árnak nullánál nagyobbnak kell lennie!');
       return;
@@ -165,18 +165,18 @@ export default function EditItem() {
     setSubmitting(true);
     try {
       await api.put(`/items/${id}`, formData);
-      
+
       if (newImages.length > 0) {
         const imageFormData = new FormData();
         newImages.forEach(image => {
           imageFormData.append('images', image);
         });
-        
+
         await api.post(`/items/${id}/images`, imageFormData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
       }
-      
+
       success('Hirdetés sikeresen frissítve!');
       navigate('/my-items');
     } catch (error) {
@@ -295,8 +295,8 @@ export default function EditItem() {
                 <p className="text-gray-400 text-sm mb-3">Az első kép lesz a borítókép a hirdetés kártyáján</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {existingImages.map((img, index) => (
-                    <div 
-                      key={img.image_id} 
+                    <div
+                      key={img.image_id}
                       className="relative group cursor-move"
                       draggable
                       onDragStart={() => handleDragStart(index)}
@@ -332,7 +332,6 @@ export default function EditItem() {
               </div>
             )}
 
-            {/* Új képek feltöltése */}
             <div>
               <label className="block text-white font-semibold mb-3">Új képek hozzáadása</label>
               <div className="border-2 border-dashed border-gray-600 rounded-xl p-6 hover:border-blue-500 transition">
@@ -353,7 +352,7 @@ export default function EditItem() {
                   <span className="text-gray-500 text-sm mt-1">PNG, JPG, JPEG (Max 10MB)</span>
                 </label>
               </div>
-              
+
               {newImages.length > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                   {newImages.map((img, index) => (
@@ -380,7 +379,6 @@ export default function EditItem() {
             </div>
           </div>
 
-          {/* Gombok */}
           <div className="flex gap-4 mt-8">
             <button
               type="button"

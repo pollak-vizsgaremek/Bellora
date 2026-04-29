@@ -69,11 +69,11 @@ export const getItemById = async (req, res) => {
 export const createItem = async (req, res) => {
   try {
     const { title, description, price, category_id } = req.body;
-    
+
     if (!price || parseFloat(price) <= 0) {
       return res.status(400).json({ message: 'Az árnak nullánál nagyobbnak kell lennie' });
     }
-    
+
     const item = await prisma.items.create({
       data: {
         user_id: req.user.user_id,
@@ -94,24 +94,24 @@ export const updateItem = async (req, res) => {
   try {
     const { title, description, price, category_id, status } = req.body;
     const id = parseInt(req.params.id);
-    
+
     if (!price || parseFloat(price) <= 0) {
       return res.status(400).json({ message: 'Az árnak nullánál nagyobbnak kell lennie' });
     }
-    
+
     const item = await prisma.items.findUnique({
       where: { item_id: id },
       select: { user_id: true }
     });
-    
+
     if (!item) {
       return res.status(404).json({ message: 'Hirdetés nem található' });
     }
-    
+
     if (item.user_id !== req.user.user_id) {
       return res.status(403).json({ message: 'Nincs jogosultságod szerkeszteni ezt a hirdetést' });
     }
-    
+
     await prisma.items.update({
       where: { item_id: id },
       data: {
@@ -122,7 +122,7 @@ export const updateItem = async (req, res) => {
         status
       }
     });
-    
+
     res.json({ message: 'Hirdetés frissítve' });
   } catch (error) {
     console.error(error);
@@ -133,23 +133,22 @@ export const updateItem = async (req, res) => {
 export const deleteItem = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    
+
     const item = await prisma.items.findUnique({
       where: { item_id: id },
       select: { user_id: true }
     });
-    
+
     if (!item) {
       return res.status(404).json({ message: 'Hirdetés nem található' });
     }
-    
+
     if (item.user_id !== req.user.user_id) {
       return res.status(403).json({ message: 'Nincs jogosultságod törölni ezt a hirdetést' });
     }
-    
-    // Prisma cascades handle itemimages and favorites deletion
+
     await prisma.items.delete({ where: { item_id: id } });
-    
+
     res.json({ message: 'Hirdetés törölve' });
   } catch (error) {
     console.error(error);
@@ -223,7 +222,7 @@ export const uploadItemImages = async (req, res) => {
       });
       uploadedImages.push({ image_id: image.image_id, image_url });
     }
-    
+
     res.json({ message: 'Képek feltöltve', images: uploadedImages });
   } catch (error) {
     console.error(error);
@@ -248,7 +247,7 @@ export const deleteItemImage = async (req, res) => {
         item_id: itemId
       }
     });
-    
+
     res.json({ message: 'Kép törölve' });
   } catch (error) {
     console.error(error);
@@ -267,7 +266,6 @@ export const setPrimaryImage = async (req, res) => {
       return res.status(403).json({ message: 'Nincs jogosultságod' });
     }
 
-    // Reset all images for this item, then set the selected one as primary
     await prisma.$transaction([
       prisma.itemimages.updateMany({
         where: { item_id: itemId },
@@ -281,7 +279,7 @@ export const setPrimaryImage = async (req, res) => {
         data: { is_primary: true }
       })
     ]);
-    
+
     res.json({ message: 'Elsődleges kép beállítva' });
   } catch (error) {
     console.error(error);
@@ -301,7 +299,7 @@ export const reorderImages = async (req, res) => {
     }
 
     const { images } = req.body;
-    
+
     await prisma.$transaction(
       images.map(img =>
         prisma.itemimages.updateMany({
@@ -310,7 +308,7 @@ export const reorderImages = async (req, res) => {
         })
       )
     );
-    
+
     res.json({ message: 'Sorrend frissítve' });
   } catch (error) {
     console.error(error);

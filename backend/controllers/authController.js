@@ -9,7 +9,7 @@ export const register = async (req, res) => {
     if (!username || !email || !password) {
       return res.status(400).json({ message: 'Minden mező kitöltése kötelező' });
     }
-    
+
     const existing = await prisma.users.findFirst({
       where: {
         OR: [{ email }, { username }]
@@ -18,15 +18,15 @@ export const register = async (req, res) => {
     if (existing) {
       return res.status(400).json({ message: 'A felhasználó már létezik' });
     }
-    
+
     const password_hash = await bcrypt.hash(password, 10);
     const user = await prisma.users.create({
       data: { username, email, password_hash }
     });
-    
+
     const token = jwt.sign({ user_id: user.user_id, username, email, role: user.role }, process.env.JWT_SECRET);
-    
-    res.json({ 
+
+    res.json({
       message: 'Sikeres regisztráció',
       token,
       user: { user_id: user.user_id, username, email, role: user.role }
@@ -44,19 +44,19 @@ export const login = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({ message: 'Email és jelszó megadása kötelező' });
     }
-    
+
     const user = await prisma.users.findUnique({ where: { email } });
     if (!user) {
       return res.status(401).json({ message: 'Hibás email vagy jelszó' });
     }
-    
+
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) {
       return res.status(401).json({ message: 'Hibás email vagy jelszó' });
     }
-    
+
     const token = jwt.sign({ user_id: user.user_id, username: user.username, email: user.email, role: user.role }, process.env.JWT_SECRET);
-    
+
     res.json({
       message: 'Sikeres bejelentkezés',
       token,

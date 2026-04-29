@@ -426,7 +426,6 @@ export default function Profile() {
               </form>
             </div>
 
-            {/* Jelszó megváltoztatása */}
             <div className="bg-gray-800 rounded-lg p-4 md:p-6 border border-gray-700">
               <h2 className="text-2xl font-bold text-white mb-6">Jelszó megváltoztatása</h2>
 
@@ -475,7 +474,6 @@ export default function Profile() {
               </form>
             </div>
 
-            {/* Fiók törlése */}
             <div className="bg-gray-800 rounded-lg p-4 md:p-6 border border-red-700">
               <h2 className="text-2xl font-bold text-red-400 mb-4">Veszélyzóna</h2>
               <p className="text-gray-400 mb-4">

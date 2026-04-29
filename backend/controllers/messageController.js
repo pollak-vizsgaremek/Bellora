@@ -1,4 +1,4 @@
-import prisma from '../config/db.js';   
+import prisma from '../config/db.js';
 
 export const getMessages = async (req, res) => {
   try {
@@ -21,9 +21,13 @@ export const getMessages = async (req, res) => {
             offer_price: true,
             counter_price: true,
             items: {
-              select: { item_id: true, title: true, price: true, itemimages: 
-                { orderBy: [{ is_primary: 'desc' }, { display_order: 'asc' }], 
-                take: 1, select: { image_url: true } } }
+              select: {
+                item_id: true, title: true, price: true, itemimages:
+                {
+                  orderBy: [{ is_primary: 'desc' }, { display_order: 'asc' }],
+                  take: 1, select: { image_url: true }
+                }
+              }
             }
           }
         }
@@ -76,7 +80,6 @@ export const getConversations = async (req, res) => {
   try {
     const userId = req.user.user_id;
 
-    // Get all messages involving the user
     const allMessages = await prisma.messages.findMany({
       where: {
         OR: [
@@ -91,7 +94,6 @@ export const getConversations = async (req, res) => {
       orderBy: { sent_at: 'desc' }
     });
 
-    // Group by other user to get unique conversations
     const conversationMap = new Map();
     for (const msg of allMessages) {
       const otherUserId = msg.sender_id === userId ? msg.receiver_id : msg.sender_id;

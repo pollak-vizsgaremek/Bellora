@@ -75,7 +75,7 @@ export const getNotifications = async (req, res) => {
       return new Date(b.created_at) - new Date(a.created_at);
     });
 
-    res.json({ 
+    res.json({
       notifications: allNotifications.slice(0, 20),
       count: allNotifications.length
     });

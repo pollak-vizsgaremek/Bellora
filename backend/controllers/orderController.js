@@ -20,7 +20,7 @@ export const createOrder = async (req, res) => {
     if (item.user_id === buyer_id) {
       return res.status(400).json({ message: 'Nem vásárolhatod meg a saját termékedet' });
     }
-    
+
     const order = await prisma.$transaction(async (tx) => {
       const newOrder = await tx.orders.create({
         data: {
@@ -39,7 +39,7 @@ export const createOrder = async (req, res) => {
       return newOrder;
     });
 
-    res.json({ 
+    res.json({
       message: 'Vásárlás sikeres!',
       order_id: order.order_id
     });

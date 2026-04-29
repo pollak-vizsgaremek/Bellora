@@ -1,6 +1,5 @@
 import prisma from '../config/db.js';
 
-// === FELHASZNÁLÓK KEZELÉSE ===
 
 export const getAllUsers = async (req, res) => {
   try {
@@ -91,7 +90,6 @@ export const updateUserRole = async (req, res) => {
   }
 };
 
-// === HIRDETÉSEK KEZELÉSE ===
 
 export const getAllItemsAdmin = async (req, res) => {
   try {
@@ -169,7 +167,6 @@ export const updateItemStatusAdmin = async (req, res) => {
   }
 };
 
-// === BEJELENTÉSEK KEZELÉSE ===
 
 export const getAllReports = async (req, res) => {
   try {
@@ -239,12 +236,10 @@ export const updateReportStatus = async (req, res) => {
       data: { status }
     });
 
-    // Ha "reviewed" (jogos bejelentés) -> törli a hirdetést
     if (status === 'reviewed') {
       await prisma.items.delete({
         where: { item_id: report.item_id }
       }).catch(() => {
-        // Ha a hirdetés már törölve van, nem baj
       });
     }
 
@@ -261,7 +256,6 @@ export const updateReportStatus = async (req, res) => {
   }
 };
 
-// === RENDELÉSEK KEZELÉSE ===
 
 export const getAllOrdersAdmin = async (req, res) => {
   try {
@@ -333,7 +327,6 @@ export const updateOrderStatusAdmin = async (req, res) => {
       data: { status }
     });
 
-    // Ha cancelled, tegyük vissza a terméket available-re
     if (status === 'cancelled') {
       await prisma.items.update({
         where: { item_id: order.item_id },
@@ -360,7 +353,6 @@ export const deleteOrderAdmin = async (req, res) => {
       return res.status(404).json({ message: 'Rendelés nem található' });
     }
 
-    // Tegyük vissza a terméket available-re
     await prisma.items.update({
       where: { item_id: order.item_id },
       data: { status: 'available' }
@@ -375,7 +367,6 @@ export const deleteOrderAdmin = async (req, res) => {
   }
 };
 
-// === DASHBOARD STATISZTIKÁK ===
 
 export const getDashboardStats = async (req, res) => {
   try {

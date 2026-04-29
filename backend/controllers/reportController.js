@@ -21,7 +21,6 @@ export const createReport = async (req, res) => {
       return res.status(400).json({ message: 'Nem jelentheted be a saját termékedet' });
     }
 
-    // Ellenőrizzük, hogy már bejelentette-e
     const existing = await prisma.reports.findFirst({
       where: {
         item_id: parseInt(item_id),

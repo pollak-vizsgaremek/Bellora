@@ -94,7 +94,7 @@ export default function Favorites() {
                 key={item.item_id}
                 className="group bg-gray-800/60 backdrop-blur-lg border border-gray-700 rounded-xl overflow-hidden hover:border-pink-500 transition-all duration-300 hover:scale-105"
               >
-                <div 
+                <div
                   onClick={() => navigate(`/item/${item.item_id}`)}
                   className="cursor-pointer"
                 >
@@ -110,15 +110,14 @@ export default function Favorites() {
                         <span className="text-gray-500 text-5xl">🖼️</span>
                       </div>
                     )}
-                    
-                    {/* Kedvenc szív jel */}
+
                     <div className="absolute top-3 right-3">
                       <div className="bg-pink-500 p-2 rounded-full animate-pulse">
                         <Heart size={20} fill="white" stroke="white" />
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="p-3 md:p-4">
                     <h3 className="font-bold text-base md:text-lg text-white mb-2 truncate group-hover:text-pink-400 transition">
                       {item.title}
@@ -126,11 +125,10 @@ export default function Favorites() {
                     <p className="text-pink-400 font-bold text-xl md:text-2xl mb-2">
                       {item.price.toLocaleString()} Ft
                     </p>
-                    
-                    {/* Eladó profilképpel */}
+
                     <div className="flex items-center gap-2 mb-2 md:mb-3">
                       {item.seller_image ? (
-                        <img 
+                        <img
                           src={`${import.meta.env.VITE_BASE_URL}${item.seller_image}`}
                           alt={item.seller_name}
                           className="w-6 h-6 rounded-full object-cover"
@@ -144,7 +142,7 @@ export default function Favorites() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="px-3 md:px-4 pb-3 md:pb-4">
                   <button
                     onClick={(e) => removeFavorite(item.item_id, e)}
